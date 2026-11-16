@@ -1,0 +1,67 @@
+<!-- title: 必要な機能の確認 -->
+<style>
+.g4{display:grid;grid-template-columns:320px 400px 1fr 330px;height:711px}
+.mk{display:flex;justify-content:center;padding-top:14px;border-right:1px solid var(--line);background:#fff}
+.fc{padding:14px 18px 0 46px;position:relative}
+.fc .fnode,.fc .slot{min-height:40px;width:280px}
+.fc .va{width:280px;text-align:center;color:#b3bac5;font-size:10px;height:16px;line-height:16px}
+.dia{width:280px;display:flex;justify-content:center;position:relative}
+.dia .d{width:190px;height:58px;background:#fff;border:1.5px solid #c9ced6;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;position:relative}
+.dia .dd{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800}
+.dia.act .d{background:#111;color:#fff}
+.yes{position:absolute;left:-30px;font-size:11px;font-weight:800;color:var(--acc)}
+.no{position:absolute;font-size:11px;font-weight:800;color:var(--sub)}
+#loop{position:absolute;left:18px;top:0;pointer-events:none}
+.bf{padding:14px 16px;border-left:1px solid var(--line);border-right:1px solid var(--line);background:#fafbfc}
+.bf .lane{border:1px solid var(--line);border-radius:10px;background:#fff;margin-bottom:10px;overflow:hidden}
+.bf .lh{background:#2b2f36;color:#fff;font-size:12px;font-weight:800;padding:6px 10px}
+.bf .bn{display:flex;flex-direction:column;align-items:center;padding:8px;gap:2px}
+.bf .bn div{font-size:12px;font-weight:700;border:1px solid #d0d5dd;border-radius:8px;padding:5px 10px;width:100%;text-align:center;background:#fff}
+.bf .bn div.hl{border:2px solid #111;background:#fff8d6}
+.bf .bn span{color:#b3bac5;font-size:10px}
+.note{font-size:12px;color:var(--sub);line-height:1.7;background:#fff;border:1px dashed #c9ced6;border-radius:10px;padding:10px}
+.rc{padding:14px 16px;background:#fff;display:flex;flex-direction:column;gap:10px}
+.rc .piece{width:100%}
+</style>
+<div class="g4">
+  <div class="mk" id="mock"></div>
+  <div class="fc" id="fc">
+    <div class="ptitle" style="margin-left:-28px">機能要件（お客さんがシステムで使う機能）</div>
+    <svg id="loop" width="40" height="300"></svg>
+    <div class="slot" data-k="search" data-accept="search" data-hint="まずはお目当ての果物を“探す”機能が必要だね。"><span class="ph">機能 ①</span></div><div class="va">▼</div>
+    <div class="slot" data-k="detail" data-accept="detail" data-hint="探した商品の値段や在庫など、くわしい情報を見る機能だよ。"><span class="ph">機能 ②</span></div><div class="va">▼</div>
+    <div class="slot" data-k="add" data-accept="add" data-hint="買うと決めた商品を、いったんためておく機能は？"><span class="ph">機能 ③</span></div><div class="va">▼</div>
+    <div class="dia" id="dia"><div class="d"></div><div class="dd">❓ まだ買う商品がある？</div><span class="yes" style="top:20px">Yes</span><span class="no" style="left:150px;top:58px">No</span></div><div class="va">▼</div>
+    <div class="fnode fixed" data-k="confirm-view"><span class="ic">📋</span>注文内容を確認する</div><div class="va">▼</div>
+    <div class="slot" data-k="pay" data-accept="pay" data-hint="届け先や支払い方法を入力する機能が必要だね。"><span class="ph">機能 ④</span></div><div class="va">▼</div>
+    <div class="slot" data-k="fix" data-accept="fix" data-hint="最後に、注文を“決める”機能だよ。"><span class="ph">機能 ⑤</span></div>
+  </div>
+  <div class="bf"><div class="ptitle">理想の業務フロー（企画で作成）</div>
+    <div class="lane"><div class="lh">🙋 お客さん</div><div class="bn"><div class="hl" id="bOrder">📱 注文する</div></div></div>
+    <div class="lane"><div class="lh">🏪 お店</div><div class="bn"><div>🗂️ 注文データを受け取る</div><span>▼</span><div>📋 在庫を確認する</div><span>▼</span><div>🧺 ピックアップ</div><span>▼</span><div>📦 発送準備</div><span>▼</span><div>🚚 発送</div></div></div>
+    <div class="note">業務フローの「📱 注文する」を、<b>システムの機能</b>に細かく分けると左の流れになるよ。<br>システムが持つべき機能を決めたものを<b>機能要件</b>という。</div></div>
+  <div class="rc"><span class="tag" style="align-self:flex-start">選択肢（機能）</span><div class="pool" id="pool"></div></div>
+</div>
+<script>
+const P=new Puzzle({root:$('#fc'),pool:$('#pool'),pieces:{
+ search:{label:'商品を検索する',icon:'🔍'},detail:{label:'商品の詳細を見る',icon:'🔎'},add:{label:'カートに商品を追加する',icon:'🛒'},pay:{label:'決済・お届け先を入力する',icon:'💳'},fix:{label:'注文を確定する',icon:'✅'},
+ x1:{label:'店員が電話で注文を受ける',icon:'📞'},x2:{label:'商品を箱に梱包する',icon:'📦'},x3:{label:'チラシを印刷する',icon:'🖨️'}}});
+const M=new Mock($('#mock'));M.go('top');
+function drawLoop(){const fc=$('#fc'),a=relRect($$('#fc .slot')[0]),d=relRect($('#dia')),f=relRect(fc);const y1=a.cy-f.y,y2=d.cy-f.y;
+  const svg=$('#loop');svg.setAttribute('height',y2+10);svg.innerHTML=`<path d="M28,${y2} H8 V${y1} H26" fill="none" stroke="#0a66d1" stroke-width="2"/><path d="M20,${y1-5} L28,${y1} L20,${y1+5}" fill="none" stroke="#0a66d1" stroke-width="2"/>`}
+drawLoop();Lines.link($('#bOrder'),$('#fc .slot'),{color:'#c9ced6'});
+const act=e=>{$$('#fc .act').forEach(x=>x.classList.remove('act'));if(e)e.classList.add('act')};
+const K=k=>$(`#fc [data-k="${k}"]`);
+Page.init({id:'06',stage:'req',title:'必要な機能の確認',
+ mission:'業務フローの「注文する」を、システムが持つ機能（機能要件）に分けよう',
+ intro:'お客さんがスマホで注文するとき、システムにはどんな機能が必要かな？ 上から順に、機能のカードを並べよう。',
+ hints:['機能は「探す → 詳しく見る → カートに入れる → (繰り返し) → 確認 → 支払い → 確定」の順。','梱包や電話はお店の人の作業。システムの機能ではないね。'],
+ async onCheck(){Lines.clear();if(!P.judge()){Lines.link($('#bOrder'),$('#fc .slot'),{color:'#c9ced6'});return false}P.lock();
+   M.S.cart=[];act(K('search'));await M.step('search');act(K('detail'));await M.step('select');await M.step('qty');act(K('add'));await M.step('add');
+   act();$('#dia').classList.add('act');M.badge('もうひとつ買おう → Yes',{cls:'w',top:8});await sleep(900);M.clearBadges();$('#dia').classList.remove('act');
+   act(K('search'));await M.go('results',{query:'くだもの'});act(K('detail'));await M.tap('p-apple');await M.go('detail',{sel:'apple',qty:1});act(K('add'));await M.tap('add');M.S.cart.push({id:'apple',qty:1});await M.go('detail',{},{push:false});toast('🛒 カートに追加しました','ok');
+   act();$('#dia').classList.add('act');M.badge('もう買う物はない → No',{cls:'w',top:8});await sleep(900);M.clearBadges();$('#dia').classList.remove('act');
+   act(K('confirm-view'));await M.step('opencart');await M.step('total');act(K('pay'));await M.step('pay');act(K('fix'));await M.step('confirm');act();M.hideFinger();
+   Lines.link($('#bOrder'),$('#fc .slot'),{color:'#c9ced6'});return true},
+ doneMsg:'機能要件がそろった！ 「まだ買う商品がある？」で繰り返すことで、何個でもカートに入れられるね。'});
+</script>

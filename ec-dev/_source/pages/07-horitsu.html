@@ -1,0 +1,56 @@
+<!-- title: 法律の確認 -->
+<style>
+.ext{height:100%;background:#f5f5f5;display:flex;flex-direction:column}
+.ext .bar{background:#334;color:#fff;font-size:11px;padding:6px 12px;font-weight:700}
+.ext .ph{margin:14px;height:200px;border-radius:12px;background:linear-gradient(135deg,#3b2a5a,#7a4fb5);display:flex;align-items:center;justify-content:center;font-size:120px;position:relative}
+.ext .ph small{position:absolute;right:8px;bottom:6px;font-size:10px;color:#fff;opacity:.85}
+.menu{margin:0 40px;background:#fff;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);font-size:12px;overflow:hidden;animation:popIn .3s}
+.menu div{padding:9px 14px;border-bottom:1px solid #eee}.menu div.on{background:#e8f0fe;font-weight:800}
+.law{height:100%;padding:12px 14px;font-size:10.5px;line-height:1.7;overflow:hidden}
+.law h4{margin:4px 0 8px;font-size:14px}
+.law table{width:100%;border-collapse:collapse}.law td{border-bottom:1px solid #eee;padding:4px 2px;vertical-align:top}.law td:first-child{font-weight:800;width:78px}
+.blur{filter:blur(6px)}
+</style>
+<script>
+const shopOf=html=>`<div class="shop">${shopHead({cart:[]})}${html}</div>`;
+const SC=new Scenes({riskLabel:'リスク',slotLabel:'当てはまる法律',
+ pieces:{
+  copy:{label:'著作権法 <small>写真・文章・音楽などの作品を守る</small>',icon:'©️'},
+  face:{label:'肖像権 <small>自分の顔や姿を勝手に公開されない権利</small>',icon:'🙂'},
+  toku:{label:'特定商取引法 <small>通信販売では販売者や返品条件を表示する</small>',icon:'📜'},
+  kei:{label:'景品表示法 <small>実際よりよく見せる、うその表示を禁止</small>',icon:'🏷️'},
+  x1:{label:'不正アクセス禁止法 <small>他人のIDで勝手にログインすることを禁止</small>',icon:'🔐'},
+  x2:{label:'道路交通法 <small>車や歩行者の交通ルール</small>',icon:'🚦'},
+  x3:{label:'商標法 <small>商品名やロゴのマークを守る</small>',icon:'™️'}},
+ list:[
+  {icon:'🖼️',where:'商品ページの準備',title:'他の人が撮った写真を勝手に使う',short:'他人の写真を無断で掲載',text:'商品ページの写真を、検索で見つけたプロのカメラマンの写真から保存して、そのまま使おうとしている。',
+   accept:['copy'],hint:'写真や文章などの“作品”をつくった人の権利を守る法律だよ。',ok:'自分で撮影した写真に差し替えたよ。作品には作者の権利（著作権）があるんだ。',
+   async scene(m){await m.go('custom',{html:`<div class="ext"><div class="bar">🌐 photo-studio.example</div><div class="ph" data-k="pic">🍇<small>© Photo Studio</small></div><div style="padding:0 16px;font-size:11px;color:#555">プロが撮影した美しいブドウの写真</div></div>`},{label:'他のWebサイト'});
+     await m.tap('pic');m.ovl.appendChild(h(`<div style="position:absolute;left:0;right:0;top:290px"><div class="menu"><div>コピー</div><div class="on">画像を保存</div><div>共有…</div></div></div>`));await sleep(900);m.clearBadges();
+     await m.go('detail',{sel:'grape',qty:1});m.hl('img','mhl-ng');m.badge('⚠ 他人が撮った写真を、許可なく商品ページに掲載！',{cls:'ng',top:250})},
+   async fix(m){await m.go('detail',{sel:'grape'});m.badge('📸 自分たちで撮影した写真に差し替え',{cls:'ok',top:250});await sleep(1300)}},
+  {icon:'📷',where:'SNSで宣伝',title:'お客さんの顔写真をSNSに投稿する',short:'お客さんの顔を無断で投稿',text:'来店したお客さんと撮った写真を、本人に聞かずにお店のSNSへ投稿しようとしている。',
+   accept:['face'],hint:'自分の“顔や姿”を、勝手に撮られたり公開されたりしない権利だよ。',ok:'本人に許可をもらい、顔がわからないように加工して投稿したよ。',
+   async scene(m){const post=b=>`<div class="sns"><div class="top">📣 Shopping公式 <span style="margin-left:auto;font-size:11px;color:#0a66d1">投稿する</span></div><div class="post"><div class="u"><i>🛍</i>shopping_official</div>今日はお客さまと記念撮影しました！🍇✨<div class="ph" style="background:#ffe3e0"><span class="${b?'blur':''}">🧑‍🦱🧑‍🌾</span></div></div></div>`;
+     await m.go('custom',{html:post(false)},{label:'SNSアプリ'});await sleep(700);m.badge('📤 投稿中…',{cls:'w',top:300});await sleep(900);m.clearBadges();m.badge('⚠ 写っているお客さんに許可をとっていない！',{cls:'ng',top:300});this._p=post},
+   async fix(m){await m.go('custom',{html:this._p(true)},{label:'SNSアプリ'});m.badge('✅ 本人の許可＋顔をぼかして投稿',{cls:'ok',top:300});await sleep(1300)}},
+  {icon:'📦',where:'注文のあと',title:'お店の名前や返品のルールが書いていない',short:'販売者・返品条件の表示がない',text:'届いた果物が傷んでいたので返品したいのに、サイトのどこにも販売者の住所や連絡先、返品の条件が書いていない。',
+   accept:['toku'],hint:'ネットの“通信販売”で守るルールを決めた法律。販売者の名前・住所・返品の条件などを表示する決まりがあるよ。',ok:'「特定商取引法に基づく表記」のページを用意したよ。',
+   async scene(m){await m.go('done');await sleep(500);m.badge('😢 傷んでいた…返品したいけど、どこに連絡すればいい？',{cls:'w',top:40});await sleep(900);
+     await m.go('custom',{html:shopOf(`<div class="err-scr"><div class="big">🤷</div><b>お問い合わせ先が見つかりません</b><small>会社名・住所・返品について<br>どこにも書かれていない</small></div>`)},{label:'サイトの下の方'});m.badge('⚠ 販売者の情報・返品のルールが表示されていない',{cls:'ng',top:330})},
+   async fix(m){await m.go('custom',{html:shopOf(`<div class="law"><h4>特定商取引法に基づく表記</h4><table><tr><td>販売業者</td><td>株式会社Shopping</td></tr><tr><td>所在地</td><td>東京都港区南青山1-2-3</td></tr><tr><td>電話番号</td><td>03-1234-5678</td></tr><tr><td>販売価格</td><td>各商品ページに記載</td></tr><tr><td>送料</td><td>全国一律500円</td></tr><tr><td>返品</td><td>到着後7日以内、傷みがあった場合は送料当社負担</td></tr></table></div>`)},{label:'特定商取引法に基づく表記'});await sleep(1500)}},
+  {icon:'📢',where:'トップページの広告',title:'実際よりよく見せるうその宣伝',short:'うそ・大げさな表示',text:'トップページの広告に「日本一甘い！ 絶対に糖度30度！ 通常価格3,000円→今だけ500円」と書こうとしている。でも、そんな根拠も、3,000円で売った実績もない。',
+   accept:['kei'],hint:'商品を実際よりよく見せたり、お得に見せかけたりする“うその表示”を禁止する法律だよ。',ok:'根拠のある、正しい表示に直したよ。',
+   async scene(m){await m.go('top');const b=m.el('banner');b.style.background='linear-gradient(120deg,#e11d48,#f59e0b)';b.innerHTML='<small>⚡今だけ⚡</small><b>日本一甘い！糖度30度保証</b><small>通常価格 <s>¥3,000</s> → <b style="display:inline;font-size:15px">¥500</b></small><span class="em">🍇</span>';
+     m.hl(b,'mhl-ng');m.badge('⚠ 根拠のない「日本一」・売ったことのない「通常価格」',{cls:'ng',top:330})},
+   async fix(m){await m.go('top');const b=m.el('banner');b.innerHTML='<small>旬のフルーツ</small><b>秋のブドウ 入荷しました</b><small>1房 ¥500（税込）</small><span class="em">🍇</span>';m.badge('✅ 事実にもとづいた表示に修正',{cls:'ok',top:330});await sleep(1300)}}
+ ]});
+</script>
+<script>
+Page.init({id:'07',stage:'req',title:'法律の確認',steps:4,
+ mission:'ECサイトを運営するときに起こりがちなリスクを見つけ、関係する法律を当てはめよう',
+ intro:'スマホの中で、お店の人がやってしまいそうな行動が再生されるよ。止まったところで、関係する<b>法律カード</b>を選んでね。',
+ hints:['カードの小さい説明文を読んで、場面に合うものを選ぼう。','「道路交通法」はECサイトとは関係ないね。'],
+ onCheck:()=>SC.check(),doneMsg:'4つのリスクに法律で対応できた！ サイトをつくる前に法律を確認しておくと、トラブルを防げるね。'});
+SC.start();
+</script>

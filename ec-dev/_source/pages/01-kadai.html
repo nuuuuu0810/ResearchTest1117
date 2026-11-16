@@ -1,0 +1,137 @@
+<!-- title: 課題の確認 -->
+<style>
+#movie{position:absolute;inset:0;z-index:95;background:#0b0d12;color:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#movie .bg{position:absolute;inset:-20%;background:radial-gradient(circle at 30% 40%,rgba(10,102,209,.35),transparent 45%),radial-gradient(circle at 75% 60%,rgba(122,90,248,.3),transparent 45%);animation:bgm 9s linear}
+@keyframes bgm{to{transform:rotate(12deg) scale(1.1)}}
+#movie .stage{position:relative;width:1200px;height:640px;display:flex;align-items:center;gap:70px;justify-content:center}
+#movie .cap{width:520px}
+#movie .cap .k{font-size:13px;letter-spacing:.3em;color:#8ab4ff;font-weight:800;margin-bottom:12px;min-height:18px}
+#movie .cap .t{font-size:44px;font-weight:900;line-height:1.3;min-height:116px}
+#movie .cap .s{font-size:16px;color:#c4cad6;margin-top:14px;line-height:1.7;min-height:54px}
+#movie .cap>*{transition:opacity .4s,transform .4s}
+#movie .cap.chg>*{opacity:0;transform:translateY(10px)}
+#movie .ph{transition:opacity .6s,transform .6s}
+#movie .road{position:absolute;left:0;right:0;bottom:70px;height:120px;opacity:0;transition:opacity .5s}
+#movie .road .ln{position:absolute;left:80px;right:80px;bottom:30px;border-bottom:3px dashed #3a4256}
+#movie .truck{position:absolute;bottom:34px;left:60px;font-size:64px;transform:scaleX(-1);transition:left 1.5s cubic-bezier(.5,0,.3,1)}
+#movie .house{position:absolute;right:90px;bottom:30px;font-size:70px}
+#movie .store{position:absolute;left:70px;bottom:30px;font-size:62px}
+#movie .title{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;opacity:0;transition:opacity .6s;background:#0b0d12}
+#movie .title h2{font-size:64px;margin:0;font-weight:900;letter-spacing:.04em}
+#movie .title .sub{color:#9aa4b8;font-size:16px;letter-spacing:.2em}
+#movie .proc{display:flex;gap:10px;align-items:center}
+#movie .proc span{padding:10px 18px;border-radius:24px;border:1.5px solid #3a4256;color:#5d6780;font-weight:800;font-size:16px;transition:all .3s}
+#movie .proc span.on{background:#fff;color:#0b0d12;border-color:#fff;box-shadow:0 0 24px rgba(255,255,255,.5)}
+#movie .proc i{color:#3a4256;font-style:normal}
+#movie .skip{position:absolute;right:26px;bottom:24px;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:8px 18px;font-weight:700;cursor:pointer;z-index:3}
+#movie .bar{position:absolute;left:0;bottom:0;height:3px;background:#fff;width:0;transition:width 8s linear}
+/* 本編 */
+.wrap{padding:18px 26px 0;display:flex;flex-direction:column;gap:14px;height:651px}
+.issue{display:flex;gap:14px;align-items:stretch}
+.issue .who{width:260px;padding:14px 16px;display:flex;gap:12px;align-items:center}
+.issue .who .av{font-size:44px}
+.issue .who b{font-size:15px}.issue .who p{margin:3px 0 0;font-size:12px;color:var(--sub);line-height:1.5}
+.prob{flex:1;padding:12px 14px;display:flex;gap:10px;align-items:center}
+.prob .c{flex:1;background:#fff5f5;border:1px solid #fbd0d0;border-radius:10px;padding:10px 12px;font-size:13px;font-weight:700;display:flex;gap:8px;align-items:center;line-height:1.4}
+.prob .c .e{font-size:24px}
+.prob .goal{background:#111;color:#fff;border-radius:10px;padding:12px 16px;font-weight:800;font-size:14px;white-space:nowrap}
+.tl{padding:16px 18px 18px;position:relative}
+.cols{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;position:relative}
+.col{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.col .num{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;color:var(--sub)}
+.col .num b{width:24px;height:24px;border-radius:50%;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px}
+.col .slot{min-height:54px}
+.col .fixedst{min-height:54px;border-radius:11px;background:var(--st-plan);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;gap:6px}
+.col .slot .piece{justify-content:center;font-size:16px;font-weight:900;min-height:50px}
+.todo{background:#fafbfc;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.6;min-height:122px;color:#344054}
+.todo .e{font-size:26px;display:block;margin-bottom:4px}
+.time{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12px;color:var(--sub);font-weight:800}
+.time .ar{flex:1;height:2px;background:linear-gradient(90deg,#d0d5dd,#111);position:relative}
+.time .ar::after{content:"";position:absolute;right:-2px;top:-5px;border:6px solid transparent;border-left:9px solid #111}
+.poolbox{padding:12px 16px;display:flex;gap:14px;align-items:center}
+.poolbox .pool{flex:1}
+.poolbox .piece{font-size:15px;padding:10px 18px}
+.col.lit .todo{border-color:#111;box-shadow:0 0 0 3px rgba(17,17,17,.1)}
+</style>
+
+<div id="movie">
+  <div class="bg"></div>
+  <div class="stage" id="mvStage"><div class="ph" id="mvPhone"></div><div class="cap" id="mvCap"><div class="k"></div><div class="t"></div><div class="s"></div></div></div>
+  <div class="road" id="mvRoad"><div class="ln"></div><div class="store">🏪</div><div class="truck" id="mvTruck">🚚</div><div class="house">🏠</div></div>
+  <div class="title" id="mvTitle"><div class="sub">SYSTEM DEVELOPMENT EXPERIENCE</div><h2>ECサイトをつくろう</h2><div class="proc" id="mvProc"></div></div>
+  <button class="skip" id="mvSkip">スキップ ▶▶</button><div class="bar" id="mvBar"></div>
+</div>
+
+<div class="wrap">
+  <div class="issue">
+    <div class="panel who"><div class="av">🧑‍🌾</div><div><b>青果店「Shopping」店長</b><p>「お店の果物を、ネットでも売りたいんです」</p></div></div>
+    <div class="panel prob">
+      <div class="c"><span class="e">📞</span>電話注文の聞き間違いが多い</div>
+      <div class="c"><span class="e">🌙</span>閉店後は注文を受けられない</div>
+      <div class="c"><span class="e">📦</span>在庫の確認に時間がかかる</div>
+      <div style="font-size:22px;color:#98a2b3">➜</div>
+      <div class="goal">🛍 ECサイトで解決しよう</div>
+    </div>
+  </div>
+  <div class="panel tl">
+    <div class="ptitle">システム開発の流れ（時系列 × 段階）</div>
+    <div class="cols" id="cols"></div>
+    <div class="time">はじめ<div class="ar"></div>公開・その後</div>
+  </div>
+  <div class="panel poolbox"><span class="tag">選択肢</span><div class="pool" id="pool"></div></div>
+</div>
+
+<script>
+const STG=[
+ ['plan','企画','💡','困りごと（課題）を見つけ、今の業務と理想の業務の流れを図にする'],
+ ['req','要件定義','📋','お客さんや店の人の話を聞き、必要な機能や守るべき法律・ルールを決める'],
+ ['des','設計','📐','画面・データベース・ネットワークなど「どうつくるか」を図に描く'],
+ ['dev','開発','💻','設計図をもとにプログラムを書き、実際に動くものをつくる'],
+ ['test','テスト','🧪','画面をつないで正しく動くか確かめ、見つけた間違いを直す'],
+ ['ops','管理運用','📈','公開後に集まったデータを見て、価格やサービスを改善し続ける']];
+const HINT={req:'この段階の説明は「話を聞いて、必要な機能・ルールを決める」。何をつくるかを“定義”する段階だよ。',
+ des:'「どうつくるか」を図にする段階。建物でいえば設計図を描くところだね。',
+ dev:'設計図をもとに、実際にプログラムを書いてつくる段階だよ。',
+ test:'つくったものが正しく動くか“確かめる”段階はどれかな？',
+ ops:'公開した“あと”の段階。サイトを管理し、運用しながら改善するよ。'};
+const cols=$('#cols');
+STG.forEach(([k,n,e,d],i)=>{cols.appendChild(h(`<div class="col" data-k="${k}"><div class="num"><b>${i+1}</b>STEP ${i+1}</div>
+  ${i===0?`<div class="fixedst">${n}</div>`:`<div class="slot" data-accept="${k}" data-hint="${HINT[k]}"><span class="ph">ここに置く</span></div>`}
+  <div class="todo"><span class="e">${e}</span>${d}</div></div>`))});
+const pieces={};STG.slice(1).forEach(([k,n])=>pieces[k]={label:n});
+Object.assign(pieces,{x1:{label:'宣伝'},x2:{label:'仕入れ'},x3:{label:'販売'}});
+const P=new Puzzle({pieces,pool:$('#pool')});
+
+Page.init({id:'01',stage:'plan',title:'課題の確認',
+  mission:'お店の困りごとを確認し、システム開発がどんな段階で進むかを並べよう',
+  intro:'やあ、ぼくはエンジニアくん！ まずは開発の全体像をつかもう。下の説明を読んで、選択肢の「段階」を正しい順番に並べてね。',
+  hints:['各段階の下の説明文に、その段階の名前のヒントが隠れているよ。','「宣伝」「仕入れ」「販売」は、お店の仕事だけどシステム開発の段階ではないよ。','流れは「何をつくるか決める → どうつくるか描く → つくる → 確かめる → 動かし続ける」。'],
+  async onCheck(){const ok=P.judge();if(!ok)return false;P.lock();
+    for(const c of $$('.col')){c.classList.add('lit');await sleep(320);c.classList.remove('lit')}
+    return true},
+  doneMsg:'正解！ この6つの段階で、お店のECサイトを一緒につくっていこう。次は「企画」の続き、今のECサイトの流れを見てみよう。'});
+
+/* ===== オープニングムービー（コンセプトムービー） ===== */
+(async function movie(){
+  $('#pg').appendChild($('#movie'));
+  const mv=$('#movie');let skip=false;const end=()=>{if(!mv.isConnected)return;mv.style.transition='opacity .5s';mv.style.opacity=0;setTimeout(()=>mv.remove(),500)};
+  $('#mvSkip').onclick=()=>{skip=true;end()};
+  const W=ms=>skip?Promise.reject('skip'):sleep(ms);
+  const cap=async(k,t,s)=>{const c=$('#mvCap');if(!c)throw 'skip';c.classList.add('chg');await sleep(300);c.children[0].textContent=k;c.children[1].innerHTML=t;c.children[2].textContent=s;c.classList.remove('chg')};
+  try{
+    requestAnimationFrame(()=>$('#mvBar').style.width='100%');
+    const m=new Mock($('#mvPhone'),{nav:false});m.w.style.transform='scale(.92)';
+    await m.go('home',{},{wait:0});await cap('','毎日の買い物を、<br>もっと身近に。','スマホひとつで、いつでも果物が届く。');await W(700);
+    await cap('01 / SEARCH','さがす','検索して、お気に入りを見つける。');
+    m.S.query='くだもの';await m.go('top',{},{wait:420});await W(150);await m.go('results',{},{wait:520});
+    await cap('02 / SELECT','えらぶ','数を選んで、カートへ。');await m.go('detail',{sel:'grape',qty:2},{wait:450});
+    await m.go('detail',{cart:[{id:'grape',qty:2},{id:'apple',qty:1}]},{wait:300});await m.go('cart',{cart:[{id:'grape',qty:2},{id:'apple',qty:1}]},{wait:600});
+    await cap('03 / ORDER','注文する','合計を確かめて、安全に支払い。');await m.go('info',{filled:true},{wait:500});await m.go('done',{},{wait:700});
+    await cap('04 / DELIVERY','とどく','お店から、あなたの家まで。');
+    $('#mvStage').style.transition='opacity .5s';$('#mvStage').style.opacity=.15;$('#mvRoad').style.opacity=1;await W(200);$('#mvTruck').style.left='calc(100% - 270px)';await W(1600);
+    const t=$('#mvTitle');t.style.opacity=1;const pr=$('#mvProc');pr.innerHTML=STG.map(s=>`<span>${s[1]}</span>`).join('<i>›</i>');
+    for(const s of $$('span',pr)){await W(220);s.classList.add('on')}
+    await W(800);end();
+  }catch(e){if(e!=='skip')console.error('movie',e);end()}
+})();
+</script>

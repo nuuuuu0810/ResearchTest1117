@@ -1,0 +1,49 @@
+<!-- title: システム配置 -->
+<style>
+#dg{position:absolute;left:0;top:0;width:1440px;height:711px}
+#side .row{padding:5px 8px}#side .row .ic{font-size:18px}
+#ph{position:absolute;left:40px;top:70px}
+.lab{position:absolute;font-size:12px;font-weight:800;color:var(--sub)}
+.dbrow{display:flex;flex-direction:column;gap:6px;width:100%;padding:0 12px}
+.dbrow div{font-size:11px;font-weight:700;background:#f2f4f7;border-radius:6px;padding:4px 8px;text-align:left}
+.zone{position:absolute;border:2px dashed #c9ced6;border-radius:18px}
+.zone b{position:absolute;top:-11px;left:16px;background:var(--bg);padding:0 8px;font-size:12px;color:var(--sub)}
+.fin{font-family:monospace}
+</style>
+<div id="dg">
+  <div class="zone" style="left:20px;top:40px;width:330px;height:640px"><b>📱 お客さんのスマホ（モックアップ）</b></div>
+  <div id="ph"></div>
+  <div class="dg-line" style="left:350px;top:330px;width:110px"></div>
+  <div id="a3" style="position:absolute;left:330px;top:150px;width:10px;height:10px"></div><div id="a4" style="position:absolute;left:330px;top:560px;width:10px;height:10px"></div>
+  <div class="dg-box" id="bNet" style="left:460px;top:270px;width:140px;height:120px"><span class="ic">🌐</span>インターネット</div>
+  <div class="dg-line" style="left:600px;top:330px;width:90px"></div>
+  <div class="dg-box" id="bSv" style="left:690px;top:250px;width:150px;height:160px"><span class="ic">🖥️</span>Webサーバー<small>ページを作って<br>送り返す</small></div>
+  <div class="dg-line" style="left:840px;top:330px;width:40px"></div>
+  <div class="dg-box" id="bDb" style="left:880px;top:120px;width:150px;height:420px;justify-content:flex-start;padding-top:18px"><span class="ic">🗄️</span>データベース<div class="dbrow" style="margin-top:14px"><div id="dbTxt">🔤 商品名（文字）</div><div style="height:80px"></div><div id="dbImg">🖼️ 商品画像</div><div>💴 単価・在庫</div></div></div>
+</div>
+<div class="panel hubside" id="side" style="top:380px;width:320px"><div class="ptitle">このページの見方</div>
+  <div style="font-size:12px;line-height:1.6;color:#344054"><b>スマホ ⇄ インターネット ⇄ サーバー ⇄ データベース</b>。①〜④を順番に体験しよう。</div>
+  <div id="finRows" style="display:flex;flex-direction:column;gap:8px;margin-top:6px"></div>
+</div>
+<script>
+const M=new Mock($('#ph'),{nav:false});M.w.style.transform='scale(.98)';M.w.style.transformOrigin='top left';M.go('detail',{sel:'apple',qty:2});
+const SUBS=[
+ {id:'16',file:'16-moji.html',label:'文字のデジタル化',desc:'商品名は数字で保存されている？',at:'#dbTxt',pos:'left',say:'データベースの中の「商品名」は、じつは数字で保存されているんだ。'},
+ {id:'17',file:'17-gazo.html',label:'画像のデジタル化',desc:'写真も数字でできている？',at:'#dbImg',pos:'left',say:'商品の写真も、色を数字にして保存しているよ。'},
+ {id:'18',file:'18-computer.html',label:'コンピュータの動作',desc:'タップしたとき、中で何が起きる？',at:'#ph .scr',pos:'right',say:'スマホの中のCPUやメモリが、どう協力して動いているか見てみよう。'},
+ {id:'19',file:'19-ronri.html',label:'論理回路',desc:'合計金額はどう計算される？',at:'#ph .phone',pos:'right',say:'「単価×個数」の計算は、0と1の回路で行われているよ。'}];
+SUBS[2].at='#a3';SUBS[3].at='#a4';SUBS[0].pos='right';SUBS[1].pos='right';
+$('#finRows').innerHTML=[['🔤','文字のデジタル化','30A2 30C3 30D7 30EB → アップル'],['🖼️','画像のデジタル化','#FF0000 #00C000… → 🍎'],['⚙️','コンピュータの動作','入力 → 記憶 → 演算・制御 → 出力'],['🔌','論理回路','011 × 010 = 110 → ¥600']].map(r=>`<div class="row"><span class="ic">${r[0]}</span><span><b>${r[1]}</b><span class="fin">${r[2]}</span></span></div>`).join('');
+async function packet(txt,from,to){const a=relRect(from),b=relRect(to);const p=h(`<div class="dg-pk">${txt}</div>`);$('#pg').appendChild(p);p.style.left=a.cx+'px';p.style.top=a.cy+'px';await sleep(50);p.style.left=b.cx+'px';p.style.top=b.cy+'px';await sleep(950);p.remove()}
+async function relay(txt){await packet(txt,$('#bDb'),$('#bSv'));await packet(txt,$('#bSv'),$('#bNet'));await packet(txt,$('#bNet'),$('#ph .scr'))}
+Page.init({id:'15',stage:'des',title:'システム配置',steps:4,checkLabel:'全体の動きを見る',
+ mission:'スマホ・インターネット・サーバー・データベースの配置と、その中の仕組みを確かめよう',
+ intro:'ここはシステム全体の配置図だよ。番号の順に、それぞれの仕組みを体験しよう。',
+ onCheck:()=>Hub.check(),doneMsg:'システム配置が完成！ 文字も画像も計算も、すべて0と1のデータとして、スマホとサーバーの間を流れているんだね。'});
+Hub.init({subs:SUBS,async finale(){const rows=$$('#finRows .row');
+  await M.go('detail',{sel:'apple',qty:1});
+  rows[0].classList.add('on');await relay('30A2 30C3 30D7 30EB');M.hl('name');toast('🔤 数字 → 文字「アップル」');await sleep(1000);M.unhl();
+  rows[1].classList.add('on');await relay('#FF0000 #00C000');M.hl('img');toast('🖼️ 色の数字 → 画像');await sleep(1000);M.unhl();
+  rows[2].classList.add('on');await M.tap('qty+');await M.go('detail',{qty:2},{push:false});toast('⚙️ タップ → CPUが処理 → 画面に表示');await sleep(900);
+  rows[3].classList.add('on');await M.tap('add');await M.go('cart',{cart:[{id:'apple',qty:2}]});M.hl('total');toast('🔌 011 × 010 = 110 → ¥600','ok');await sleep(1400);M.unhl();M.hideFinger()}});
+</script>

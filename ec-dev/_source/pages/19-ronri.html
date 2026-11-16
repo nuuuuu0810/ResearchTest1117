@@ -1,0 +1,88 @@
+<!-- title: 論理回路 -->
+<style>
+.g2{display:grid;grid-template-columns:320px 1fr;height:711px}
+.mk{display:flex;justify-content:center;padding-top:14px;border-right:1px solid var(--line);background:#fff}
+.rt{padding:12px 20px;display:flex;flex-direction:column;gap:9px;overflow:hidden}
+.lyr{display:grid;grid-template-columns:86px 1fr;gap:12px;align-items:stretch}
+.lyr>.lh{background:#111;color:#fff;border-radius:10px;font-size:12px;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px}
+.lyr>.lh small{font-size:9.5px;font-weight:600;opacity:.75}
+.lyr>.bd{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.lyr.dim{opacity:.35}
+.num{font-size:13px;font-weight:700}.num b{font-size:26px;margin:0 4px}
+.bits{display:flex;gap:6px;align-items:flex-end}
+.bit{display:flex;flex-direction:column;align-items:center;gap:2px}
+.bit small{font-size:9.5px;color:var(--sub);font-weight:700}
+.bit .slot,.bit .bv{width:40px;height:40px;min-width:0;min-height:0}
+.bit .slot .piece{width:36px;height:36px;justify-content:center;padding:0;font-size:18px;font-family:monospace}
+.bit .bv{border-radius:9px;background:#f2f4f7;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:18px;font-weight:900}
+.gate{border:1.5px solid var(--line);border-radius:12px;padding:8px 10px;display:flex;gap:10px;align-items:center;background:#fcfcfd}
+.gate .tt{font-size:11px;border-collapse:collapse;font-family:monospace}
+.gate .tt td{border:1px solid #e4e7ec;padding:1px 6px;text-align:center}
+.gate .tt tr:first-child td{background:#f2f4f7;font-weight:800;font-family:inherit}
+.gate .gn{font-size:12px;font-weight:800;width:92px;line-height:1.4}
+.gate .slot{width:110px;min-width:0;height:62px}
+.gate .slot .piece{height:58px;flex-direction:column;justify-content:center;gap:0;padding:2px}
+.gpc svg{width:40px;height:26px}
+.pool .piece.gpc{flex-direction:column;gap:0;padding:4px 10px}
+.add{font-family:monospace;border-collapse:collapse}
+.add td{padding:2px 4px;text-align:center;font-size:16px;font-weight:900}
+.add td.l{font-family:inherit;font-size:11.5px;font-weight:800;text-align:right;color:var(--sub);padding-right:10px}
+.add tr.sum td{border-top:2px solid #111}
+.add .slot{width:40px;height:40px;min-width:0;min-height:0}.add .slot .piece{width:36px;height:36px;justify-content:center;padding:0;font-size:18px}
+.add .cr .slot{width:32px;height:30px}.add .cr .slot .piece{width:28px;height:26px;font-size:13px}
+.res{font-size:14px;font-weight:800;display:flex;align-items:center;gap:10px}
+.res .big{font-size:28px}
+.pp{font-family:monospace;font-size:14px;line-height:1.5;background:#0f172a;color:#e2e8f0;border-radius:10px;padding:8px 14px;white-space:pre}
+.pp .y{color:#facc15}
+.pl{display:flex;gap:10px;align-items:center}
+</style>
+<div class="g2">
+  <div class="mk" id="mock"></div>
+  <div class="rt" id="rt"></div>
+</div>
+<script>
+const GSVG={
+ AND:'<svg viewBox="0 0 40 26"><path d="M4 3h14a10 10 0 0 1 0 20H4z" fill="#fff" stroke="#111" stroke-width="2"/><path d="M0 8h4M0 18h4M28 13h12" stroke="#111" stroke-width="2"/></svg>',
+ OR:'<svg viewBox="0 0 40 26"><path d="M3 3q8 10 0 20q16 0 26-10Q19 3 3 3z" fill="#fff" stroke="#111" stroke-width="2"/><path d="M0 8h6M0 18h6M29 13h11" stroke="#111" stroke-width="2"/></svg>',
+ XOR:'<svg viewBox="0 0 40 26"><path d="M7 3q8 10 0 20q16 0 26-10Q23 3 7 3z" fill="#fff" stroke="#111" stroke-width="2"/><path d="M2 3q8 10 0 20" fill="none" stroke="#111" stroke-width="2"/><path d="M0 8h8M0 18h8M33 13h7" stroke="#111" stroke-width="2"/></svg>',
+ NOT:'<svg viewBox="0 0 40 26"><path d="M6 3l20 10-20 10z" fill="#fff" stroke="#111" stroke-width="2"/><circle cx="29" cy="13" r="3" fill="#fff" stroke="#111" stroke-width="2"/><path d="M0 13h6M32 13h8" stroke="#111" stroke-width="2"/></svg>'};
+const GDESC={AND:'論理積（両方1なら1）',OR:'論理和（どちらか1なら1）',XOR:'排他的論理和（違えば1）',NOT:'否定（反対にする）'};
+const M=new Mock($('#mock'));M.go('detail',{sel:'apple',qty:1});
+let stage=0,P=null;
+const bitsSlots=(v,key)=>[8,4,2,1].map(w=>`<div class="bit"><small>${w}</small><div class="slot" data-accept="${(v&w)?1:0}" data-hint="${key}：${v} を 8・4・2・1 の組み合わせで表そう。${w}の位は${(v&w)?'使う（1）':'使わない（0）'}かな？"><span class="ph">?</span></div></div>`).join('');
+const bitsV=v=>[8,4,2,1].map(w=>`<div class="bit"><small>${w}</small><div class="bv">${(v&w)?1:0}</div></div>`).join('');
+function render(){const R=$('#rt');
+ const L1=stage===0?`<div class="num">単価 <b>3</b>（百円）</div><div class="bits">${bitsSlots(3,'単価')}</div><div class="num" style="margin-left:14px">個数 <b>2</b></div><div class="bits">${bitsSlots(2,'個数')}</div>`
+   :stage===1?`<div class="num">単価 <b>3</b>（百円）</div><div class="bits">${bitsV(3)}</div><div class="num">× 個数 <b>2</b></div><div class="bits">${bitsV(2)}</div>`
+   :`<div class="num">🍎 アップル小計 <b>6</b></div><div class="bits">${bitsV(6)}</div><div class="num">＋ 🍊 オレンジ小計 <b>3</b>（100円×3個）</div><div class="bits">${bitsV(3)}</div>`;
+ const gate=(n,tt,acc,hint)=>`<div class="gate"><div class="gn">${n}</div><table class="tt">${tt}</table><div class="slot" data-accept="${acc}" data-hint="${hint}"><span class="ph">回路を置く</span></div></div>`;
+ const L2=stage===1?gate('1けたの<br>かけ算 A×B','<tr><td>A</td><td>B</td><td>A×B</td></tr><tr><td>0</td><td>0</td><td>0</td></tr><tr><td>0</td><td>1</td><td>0</td></tr><tr><td>1</td><td>0</td><td>0</td></tr><tr><td>1</td><td>1</td><td>1</td></tr>','AND','「両方が1のときだけ1」になる回路はどれ？')
+   +gate('1けたのたし算<br>「和」S','<tr><td>A</td><td>B</td><td>S</td></tr><tr><td>0</td><td>0</td><td>0</td></tr><tr><td>0</td><td>1</td><td>1</td></tr><tr><td>1</td><td>0</td><td>1</td></tr><tr><td>1</td><td>1</td><td>0</td></tr>','XOR','1+1=10（2進数）なので、和のけたは0になる。「2つが違うときだけ1」の回路だよ。')
+   +gate('1けたのたし算<br>「くり上がり」C','<tr><td>A</td><td>B</td><td>C</td></tr><tr><td>0</td><td>0</td><td>0</td></tr><tr><td>0</td><td>1</td><td>0</td></tr><tr><td>1</td><td>0</td><td>0</td></tr><tr><td>1</td><td>1</td><td>1</td></tr>','AND','くり上がるのは1+1のときだけ。「両方1のとき1」になる回路は？')
+   :stage===2?`<table class="add"><tr class="cr"><td class="l">くり上がり<br><small>（AND）</small></td><td>${cs(1)}</td><td>${cs(1)}</td><td>${cs(0)}</td><td style="color:#c0c4ca">-</td></tr><tr><td class="l">🍎 6</td><td>0</td><td>1</td><td>1</td><td>0</td></tr><tr><td class="l">🍊 3 ＋</td><td>0</td><td>0</td><td>1</td><td>1</td></tr><tr class="sum"><td class="l">合計（XOR）</td><td>${ss(1)}</td><td>${ss(0)}</td><td>${ss(0)}</td><td>${ss(1)}</td></tr><tr><td class="l"></td><td style="font-size:10px;color:#98a2b3">8</td><td style="font-size:10px;color:#98a2b3">4</td><td style="font-size:10px;color:#98a2b3">2</td><td style="font-size:10px;color:#98a2b3">1</td></tr></table>
+     <div style="font-size:12px;line-height:1.7;color:#344054;max-width:330px">右（1の位）から順に計算しよう。<br>各けた：<b>A＋B＋下からのくり上がり</b><br>1＋1＝<b>10</b>（和0・くり上がり1）<br>1＋1＋1＝<b>11</b>（和1・くり上がり1）</div>`
+   :'<div style="color:var(--mut);font-size:12px">（前の段階を終えると使えるよ）</div>';
+ R.innerHTML=`<div class="lyr"><div class="lh">① 数字<small>10進数</small></div><div class="bd"><span style="font-size:12.5px">${['🍎 アップル（300円）を <b>2個</b> 選んだ','🛒 カートに追加：<b>単価×個数</b> を計算','🧾 カートの <b>合計金額</b> を計算'][stage]}</span></div></div>
+  <div class="lyr ${stage===2?'':''}"><div class="lh">② 進数<small>2進数</small></div><div class="bd">${L1}</div></div>
+  <div class="lyr ${stage===0?'dim':''}"><div class="lh">③ 回路図<small>論理回路</small></div><div class="bd">${L2}</div></div>
+  <div class="lyr"><div class="lh">④ 結果</div><div class="bd res" id="res">${stage===0?'2進数にできたら、回路で計算できるようになるよ':stage===1?'<span id="pp" class="pp">  0011\n× 0010\n------</span>':'<span>合計 ＝ ????（2進数）→ ? 円</span>'}</div></div>
+  <div class="pl"><span class="tag">選択肢</span><div class="pool" id="pool"></div></div>`;
+ const pieces=stage===1?Object.fromEntries(Object.keys(GSVG).map(k=>[k,{label:`${k}<small style="font-size:9px;color:#667085;font-weight:600">${GDESC[k]}</small>`,icon:GSVG[k],cls:'gpc',inf:true}])):{0:{label:'0',inf:true},1:{label:'1',inf:true}};
+ if(P){P.lock(true)}P=new Puzzle({root:$('#rt'),pool:$('#pool'),pieces,shuffle:false});Page.setStep(stage)}
+function cs(v){return `<div class="slot" data-accept="${v}" data-hint="このけたへのくり上がりは？ 1つ右のけたで「1＋1」以上になったら1だよ。"><span class="ph"></span></div>`}
+function ss(v){return `<div class="slot" data-accept="${v}" data-hint="このけたの A＋B＋くり上がり を計算して、2で割ったあまり（和のけた）を書こう。"><span class="ph"></span></div>`}
+render();
+Page.init({id:'19',stage:'des',title:'論理回路',steps:3,nextLabel:'システム配置へ戻る ▶',
+ mission:'「合計金額＝単価×個数」を、0と1の論理回路で計算してみよう',
+ intro:'コンピュータは0と1だけで計算しているよ。まずは単価と個数を<b>2進数</b>にしよう。8・4・2・1の位で考えるとわかりやすいよ。',
+ hints:['2進数は、右から1・2・4・8の位。3＝2＋1、2＝2。','真理値表（表）の出力の列をよく見て、同じ動きをする回路を選ぼう。','たし算は1の位から。くり上がりを忘れずに！'],
+ async onCheck(){
+  if(!P.judge())return false;P.lock();
+  if(stage===0){await M.tap('qty+');await M.go('detail',{qty:2},{push:false});toast('3 → 0011 / 2 → 0010');await sleep(900);stage=1;render();Eng.say('2進数にできたね！ 次は計算する回路。表（真理値表）の動きに合う回路を選ぼう。','ok');return false}
+  if(stage===1){const pp=$('#pp');const lines=['  0011','× 0010','------','  0000   ← 0011 AND 0',' 0011    ← 0011 AND 1','------  たし算（XOR・AND）','  0110   = 6（百円）'];pp.textContent='';for(const l of lines){pp.textContent+=l+'\n';await sleep(380)}
+    $('#res').insertAdjacentHTML('beforeend','<span class="big">→ ¥600</span>');await M.tap('add');await M.go('cart',{cart:[{id:'apple',qty:2}]});M.hl('total');await sleep(1200);M.unhl();
+    stage=2;render();await M.go('cart',{cart:[{id:'apple',qty:2},{id:'orange',qty:3}],totalOverride:'???'},{label:'カート（計算中）'});Eng.say('アップルの小計は¥600。オレンジ（100円×3個＝3）もカートに入ったよ。最後に、2つの小計をたし算回路で合計しよう！','ok');return false}
+  $('#res').innerHTML='<span>1001（2進数）</span><span>= 8＋1 = <b>9</b>（百円）</span><span class="big">→ ¥900</span>';
+  await M.go('cart',{cart:[{id:'apple',qty:2},{id:'orange',qty:3}],totalOverride:undefined});delete M.S.totalOverride;await M.go('cart',{},{push:false});M.hl('total');toast('🧮 合計 ¥900','ok');await sleep(1200);M.unhl();M.hideFinger();return true},
+ doneMsg:'回路だけで合計金額が出せた！ コンピュータは AND・OR・XOR・NOT などの回路を組み合わせて、たし算やかけ算をしているんだ。'});
+</script>

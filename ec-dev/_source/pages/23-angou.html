@@ -1,0 +1,81 @@
+<!-- title: 暗号化 -->
+<style>
+.g3{display:grid;grid-template-columns:320px 1fr 220px;height:711px}
+.mk{display:flex;justify-content:center;padding-top:14px;border-right:1px solid var(--line);background:#fff}
+.sv{border-left:1px solid var(--line);background:#fff;display:flex;flex-direction:column;align-items:center;padding:20px 12px;gap:10px;text-align:center}
+.sv .ic{font-size:60px}
+.sv .rcv{width:100%;min-height:90px;border:2px dashed #c9ced6;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;padding:8px;font-family:monospace;word-break:break-all}
+.sv .keys{font-size:11px;color:var(--sub);line-height:1.8}
+.cc{padding:14px 20px;display:flex;flex-direction:column;gap:12px}
+.mode{display:flex;gap:8px}
+.mode span{padding:6px 14px;border-radius:18px;font-size:12px;font-weight:800;background:#e9ecf1;color:#667085}
+.mode span.on{background:#111;color:#fff}
+.lane{display:grid;grid-template-columns:120px 40px 150px 1fr 150px 40px 120px;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 14px;position:relative}
+.doc{border:2px solid #2b2f36;border-radius:10px;padding:8px;text-align:center;font-size:11px;font-weight:800;background:#fff;min-height:74px;display:flex;flex-direction:column;justify-content:center;gap:3px}
+.doc .ic{font-size:26px}
+.doc.enc{background:#0f172a;color:#7dd3fc;font-family:monospace}
+.ar{text-align:center;color:#98a2b3;font-size:22px}
+.op{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:800}
+.op .slot{width:150px;min-height:62px}
+.op .slot .piece{min-height:58px;justify-content:center}
+.wire{position:relative;height:74px;display:flex;align-items:center;justify-content:center}
+.wire::before{content:"";position:absolute;left:0;right:0;top:50%;height:3px;background:repeating-linear-gradient(90deg,#2b2f36 0 8px,transparent 8px 14px)}
+.spy{position:absolute;top:-58px;left:50%;transform:translateX(-50%);text-align:center;font-size:11px;font-weight:800;width:200px}
+.spy .ic{font-size:30px;display:block}
+.spy .see{background:#fff;border:1px solid var(--line);border-radius:8px;padding:3px 6px;font-family:monospace;margin-top:2px;min-height:22px}
+.spy .see.leak{background:var(--ngbg);border-color:var(--ng);color:var(--ng)}
+.fly{position:absolute;top:50%;transform:translate(-50%,-50%);background:#111;color:#fff;border-radius:8px;padding:4px 8px;font-size:11px;font-family:monospace;transition:left 1.3s ease-in-out;z-index:2;white-space:nowrap}
+.exp{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.exp div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.7}
+.exp b{font-size:13px}
+.exp .dim{opacity:.4}
+.pl{display:flex;gap:10px;align-items:center}
+</style>
+<div class="g3">
+  <div class="mk" id="mock"></div>
+  <div class="cc">
+    <div class="mode"><span id="m1" class="on">① 共通鍵暗号方式</span><span id="m2">② 公開鍵暗号方式</span></div>
+    <div class="lane" id="lane">
+      <div class="doc"><span class="ic">💳</span>カード番号<br>4980 1234…</div><div class="ar">➜</div>
+      <div class="op">🔒 暗号化する鍵<div class="slot" id="sEnc"><span class="ph">鍵を置く</span></div></div>
+      <div class="wire" id="wire"><div class="spy"><span class="ic">🕵️</span>通信をのぞく人<div class="see" id="see"></div></div></div>
+      <div class="op">🔓 復号する鍵<div class="slot" id="sDec"><span class="ph">鍵を置く</span></div></div><div class="ar">➜</div>
+      <div class="doc" id="out"><span class="ic">❔</span>サーバーで<br>読めるか？</div>
+    </div>
+    <div class="exp"><div id="e1"><b>🔑 共通鍵暗号方式</b><br>暗号化と復号に<b>同じ鍵</b>を使う。処理が速い。<br>ただし、その鍵を相手に<b>安全に渡す</b>のがむずかしい。</div>
+      <div id="e2" class="dim"><b>🔓🗝️ 公開鍵暗号方式</b><br>受け取る側（サーバー）が<b>公開鍵</b>と<b>秘密鍵</b>のペアをつくる。<br>公開鍵はだれに配ってもよく、それで暗号化したものは<b>ペアの秘密鍵でしか</b>復号できない。</div></div>
+    <div class="pl"><span class="tag">選択肢（鍵）</span><div class="pool" id="pool"></div></div>
+  </div>
+  <div class="sv"><div class="ic">🖥️</div><b>Webサーバー</b><div class="rcv" id="rcv">受信待ち</div><div class="keys" id="svk">🔑 共通鍵（事前に共有）</div></div>
+</div>
+<script>
+const M=new Mock($('#mock'));M.go('info',{filled:true});
+const KEYS={com:['共通鍵','🔑'],pub:['サーバーの公開鍵','🔓'],sec:['サーバーの秘密鍵','🗝️'],cpub:['お客さんの公開鍵','🔐'],none:['鍵なし（そのまま送る）','📭']};
+let stage=0;
+const ACC=[{enc:'com',dec:'com',he:'共通鍵暗号方式では、暗号化と復号に“同じ鍵”を使うよ。',hd:'暗号化したときと同じ鍵でないと、元に戻せないよ。'},
+ {enc:'pub',dec:'sec',he:'だれでも使ってよい鍵で暗号化するよ。受け取るのはサーバーだから…“サーバーの”公開鍵だね。',hd:'公開鍵で暗号化したものは、ペアになっている“秘密鍵”でしか元に戻せない。秘密鍵を持っているのはサーバーだけ。'}];
+function setup(){const a=ACC[stage];$('#sEnc').dataset.accept=a.enc;$('#sDec').dataset.accept=a.dec;$('#sEnc').dataset.hint=a.he;$('#sDec').dataset.hint=a.hd;
+  $('#m1').classList.toggle('on',stage===0);$('#m2').classList.toggle('on',stage===1);$('#e2').classList.toggle('dim',stage===0);$('#e1').classList.toggle('dim',stage===1);
+  $('#svk').innerHTML=stage===0?'🔑 共通鍵（事前に共有）':'🔓 公開鍵（だれでも入手OK）<br>🗝️ 秘密鍵（サーバーだけが持つ）';Page.setStep(stage)}
+const pieces={};Object.entries(KEYS).forEach(([k,v])=>pieces[k]={label:v[0],icon:v[1],inf:true});
+let P=new Puzzle({root:$('#lane'),pool:$('#pool'),pieces,shuffle:false});setup();
+async function send(){const e=P.get($('#sEnc')),d=P.get($('#sDec'));const plain='4980 1234 5678 9012',enc='x9#Qa7!pL2@vR8z';
+  const sent=e==='none'||!e?plain:enc;const w=$('#wire');const f=h(`<div class="fly" style="left:0%">${sent.slice(0,12)}…</div>`);w.appendChild(f);await sleep(40);f.style.left='50%';await sleep(700);
+  const see=$('#see');see.textContent=sent.slice(0,15);see.classList.toggle('leak',sent===plain);
+  if(sent===plain){M.badge('🚨 カード番号がのぞかれた！（流出）',{cls:'ng',top:300})}
+  f.style.left='100%';await sleep(800);f.remove();
+  const ok=(e===ACC[stage].enc&&d===ACC[stage].dec);const canRead=sent===plain||ok;
+  $('#rcv').textContent=canRead?plain:enc;$('#out').innerHTML=canRead?'<span class="ic">💳</span>カード番号を<br>読めた！':'<span class="ic">❌</span>読めない<br>（届かない）';
+  if(!canRead)M.badge('⚠ サーバーが読めず、注文が届かない…',{cls:'ng',top:300});
+  return ok}
+Page.init({id:'23',stage:'des',title:'暗号化',steps:2,nextLabel:'ネットワーク構成図へ戻る ▶',
+ mission:'お客さんのカード番号を、のぞかれても大丈夫なように暗号化してサーバーへ届けよう',
+ intro:'通信の途中には、のぞいている人がいるかもしれない…。鍵のカードを置いて、カード番号を安全に送ろう。まずは<b>共通鍵暗号方式</b>から。',
+ hints:['「鍵なし」で送ると、のぞいている人にそのまま読まれてしまうよ。','公開鍵暗号方式：公開鍵で閉める → 秘密鍵で開ける。どちらも“受け取る人（サーバー）”の鍵だよ。'],
+ async onCheck(){M.clearBadges();$('#see').textContent='';const ok=await send();
+   if(!ok){P.judge();return false}P.lock(true);$('#sEnc').classList.add('ok');$('#sDec').classList.add('ok');
+   if(stage===0){toast('🔑 共通鍵で安全に届いた！');await sleep(800);Eng.say('届いた！ でも共通鍵には弱点がある。最初に鍵そのものをサーバーに渡すとき、のぞかれたら終わり…。そこで<b>公開鍵暗号方式</b>だ！','ok');
+     stage=1;P.reset();P.lock(false);$('#rcv').textContent='受信待ち';$('#out').innerHTML='<span class="ic">❔</span>サーバーで<br>読めるか？';$('#see').textContent='';setup();return false}
+   await M.tap('confirm');await M.go('done');M.hideFinger();Page.setStep(2);return true},
+ doneMsg:'暗号化マスター！ 実際のHTTPS（SSL/TLS）では、公開鍵暗号で“共通鍵”を安全に渡し、そのあとは速い共通鍵暗号で通信しているんだ。'});
+</script>

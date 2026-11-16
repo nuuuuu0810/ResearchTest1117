@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>システム開発体験 ECサイトをつくろう</title>
+    <link rel="icon" href="icon.png" type="image/png">
+    <style>
+        body {
+            margin: 10px;
+            font-family: sans-serif;
+            background-color: #f0f0f0;
+        }
+        .iframe-wrapper {
+            width: 85%;
+            margin: 20px auto;
+        }
+        .iframe-container {
+            aspect-ratio: 1440 / 825;
+            overflow: hidden;
+            position: relative;
+            background-color: #eee;
+        }
+        .iframe-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 1440px;
+            height: 825px;
+            border: none;
+            transform-origin: 0 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="iframe-wrapper">
+        <div class="iframe-container">
+          <iframe src="main.html"></iframe>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.querySelector('.iframe-container');
+            const iframe = container.querySelector('iframe');
+            const contentOriginalWidth = 1440;
+
+            function adjustIframeScale() {
+                if (!container || !iframe) return;
+                const scaleFactor = container.offsetWidth / contentOriginalWidth;
+                iframe.style.transform = `scale(${scaleFactor})`;
+            }
+
+            iframe.addEventListener('load', adjustIframeScale);
+            adjustIframeScale();
+            window.addEventListener('resize', adjustIframeScale);
+
+            if (typeof ResizeObserver !== 'undefined') {
+                new ResizeObserver(adjustIframeScale).observe(container);
+            }
+        });
+    </script>
+
+</body>
+</html>

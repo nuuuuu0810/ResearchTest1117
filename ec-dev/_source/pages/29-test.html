@@ -1,0 +1,65 @@
+<!-- title: 結合テスト -->
+<style>
+.wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:14px 16px;height:711px}
+.case{display:flex;flex-direction:column;gap:8px;padding:12px;overflow:hidden}
+.case .hd{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;flex-wrap:wrap}
+.case .hd .s{background:#f2f4f7;border-radius:8px;padding:3px 8px}
+.case .hd .a{background:#111;color:#fff;border-radius:12px;padding:3px 9px}
+.body{display:flex;gap:10px}
+.mm{width:150px;height:306px;flex:none;position:relative}
+.mm .mockwrap{position:absolute;left:0;top:0;transform:scale(.55);transform-origin:0 0}
+.lines{flex:1;display:flex;flex-direction:column;gap:5px}
+.lines .ln{display:flex;align-items:center;gap:6px}
+.lines .no{font-family:monospace;font-size:11px;color:#98a2b3;width:16px;text-align:right}
+.lines .slot{flex:1;min-height:40px;min-width:0}
+.lines .slot .piece{font-family:monospace;font-size:11.5px;font-weight:700;background:#0f172a;color:#e2e8f0;border-color:#0f172a;min-height:38px;padding:6px 9px}
+.lines .slot.selectable .piece{outline:3px solid var(--acc)}
+.lines .ln.run .no{color:#f5b400;font-weight:900}
+.lines .ln.run .piece{background:#3b3417;border-color:#facc15}
+.res{border-radius:10px;border:1px solid var(--line);font-size:12px;overflow:hidden}
+.res div{display:grid;grid-template-columns:52px 1fr;gap:6px;padding:6px 10px;border-bottom:1px solid var(--line)}
+.res div:last-child{border-bottom:none}
+.res b{font-size:11px;color:var(--sub)}
+.res .ng{background:var(--ngbg);color:#912018;font-weight:800}.res .okr{background:var(--okbg);color:#05603a;font-weight:800}
+.run{display:flex;gap:8px;align-items:center}
+.run .btn{padding:7px 14px}
+.badge2{font-size:11px;font-weight:800;border-radius:10px;padding:3px 9px;background:#e9ecf1;color:#667085}
+.badge2.ok{background:var(--okbg);color:var(--ok)}.badge2.ng{background:var(--ngbg);color:var(--ng)}
+.tip{font-size:11.5px;color:var(--sub);line-height:1.5}
+</style>
+<div class="wrap" id="wrap"></div>
+<script>
+const CASES=[
+ {t:'テスト①',from:'商品詳細',act:'🛒 カートに入れる',to:'カート',expect:'グレープ×2、合計 ¥1,000',
+  lines:{recv:'qty = 入力された個数(2)',add:'cart.add(グレープ, qty)',calc:'total = カートの合計を計算',show:'カート画面を表示(total)'},correct:['recv','add','calc','show'],start:['recv','calc','add','show'],
+  sim(o,m){let qty=null,cart=[],total=null,shown=null;for(const k of o){if(k==='recv')qty=2;if(k==='add')cart.push({id:'grape',qty:qty??1});if(k==='calc')total=cart.reduce((a,x)=>a+PD[x.id].price*x.qty,0);if(k==='show')shown={cart:[...cart],total}}
+   return{txt:shown?`グレープ×${(shown.cart[0]||{qty:0}).qty}、合計 ${shown.total==null?'？':yen(shown.total)}`:'画面が表示されない',scr:shown?['cart',{cart:shown.cart.length?shown.cart:[{id:'grape',qty:2}],totalOverride:shown.total==null?'？':yen(shown.total)}]:['error',{errTitle:'表示されない'}]}}},
+ {t:'テスト②',from:'お客様情報',act:'✅ 注文を確定',to:'注文完了',expect:'在庫3個のパイナップルを5個注文 →「在庫が足りません」と表示し、注文は登録しない',
+  lines:{chk:'入力内容をチェックする',stock:'if 在庫 < 個数: エラー表示して終了',reg:'注文をDBに登録する',dec:'在庫を個数ぶん減らす',done:'完了画面を表示する'},correct:['chk','stock','reg','dec','done'],start:['chk','reg','dec','stock','done'],
+  sim(o){let stock=3,reg=false;for(const k of o){if(k==='stock'&&stock<5)return{txt:reg?`「在庫が足りません」…でも注文は登録ずみ！ 在庫 ${stock}個`:'「在庫が足りません」と表示（登録なし）',scr:['error',{errIcon:'📦',errTitle:'在庫が足りません',errText:reg?`⚠ 注文はすでに登録された（在庫 ${stock}）`:'注文は登録されていません'}]};if(k==='reg')reg=true;if(k==='dec')stock-=5;if(k==='done')return{txt:`注文完了と表示（在庫 ${stock}個）`,scr:['done',{}]}}return{txt:'何も表示されない',scr:['error',{}]}}},
+ {t:'テスト③',from:'トップ',act:'🔍 検索ボタン',to:'検索結果',expect:'くだものが「安い順」に並んで表示される',
+  lines:{recv:'q = 入力された検索語',find:'list = 商品DBから q を探す',sort:'list を安い順に並び替える',show:'検索結果画面を表示(list)'},correct:['recv','find','sort','show'],start:['recv','find','show','sort'],
+  sim(o){let list=null,shown=null;for(const k of o){if(k==='find')list=['apple','grape','pine','orange','straw','banana'];if(k==='sort'&&list)list=[...list].sort((a,b)=>PD[a].price-PD[b].price);if(k==='show')shown=list?[...list]:[]}
+   const sorted=shown&&shown.length&&shown.every((x,i)=>i===0||PD[shown[i-1]].price<=PD[x].price);return{txt:!shown?'表示されない':!shown.length?'0件と表示':sorted?'安い順に表示':'おすすめ順のまま表示（並んでいない）',scr:['results',{query:'くだもの',list:shown||[],sortLabel:sorted?'安い順':'おすすめ順'}]}}}];
+const mocks=[],Ps=[],state=[];
+CASES.forEach((c,ci)=>{const el=h(`<div class="panel case"><div class="hd">${c.t}　<span class="s">${c.from}</span>➜<span class="a">${c.act}</span>➜<span class="s">${c.to}</span></div>
+  <div class="body"><div class="mm"></div><div class="lines">${c.start.map((k,i)=>`<div class="ln"><span class="no">${i+1}</span><div class="slot" data-accept="${c.correct[i]}" data-hint="${hint(ci,i)}"></div></div>`).join('')}</div></div>
+  <div class="res"><div><b>期待</b><span>${c.expect}</span></div><div class="act"><b>実際</b><span>（テストを実行してみよう）</span></div></div>
+  <div class="run"><button class="btn">▶ テスト実行</button><span class="badge2">未実行</span><span class="tip">行をドラッグ（またはクリック2回）で入れかえ</span></div></div>`);$('#wrap').appendChild(el);
+ const m=new Mock($('.mm',el),{nav:false});m.go(ci===0?'detail':ci===1?'info':'top',{sel:'grape',qty:2,filled:true,cart:[{id:'pine',qty:5}]});mocks.push(m);
+ const pieces={};Object.entries(c.lines).forEach(([k,v])=>pieces[k]={label:v});const P=new Puzzle({root:$('.lines',el),pieces,swap:true,shuffle:false});
+ $$('.slot',el).forEach((s,i)=>P.put(s,c.start[i],{silent:true}));Ps.push(P);$('.btn',el).onclick=()=>run(ci);state.push(false)});
+function hint(ci,i){return ['合計を計算するのは、カートに商品を「入れた後」じゃないと…','在庫が足りるか確かめる前に登録してしまうと、売れない注文が残ってしまう！','表示した“後”に並び替えても、画面には反映されないよ。'][ci]}
+async function run(ci){const c=CASES[ci],P=Ps[ci],el=$$('.case')[ci],m=mocks[ci];const o=P.slots().map(s=>P.get(s));const lns=$$('.lines .ln',el);
+ for(let i=0;i<lns.length;i++){lns.forEach(l=>l.classList.remove('run'));lns[i].classList.add('run');await sleep(260)}lns.forEach(l=>l.classList.remove('run'));
+ const r=c.sim(o);await m.go(r.scr[0],r.scr[1]);const ok=o.join()===c.correct.join();state[ci]=ok;
+ const a=$('.res .act',el);a.className='act '+(ok?'okr':'ng');a.lastElementChild.textContent=r.txt;const b=$('.badge2',el);b.className='badge2 '+(ok?'ok':'ng');b.textContent=ok?'✓ 合格':'✗ 不合格';return ok}
+Page.init({id:'29',stage:'test',title:'結合テスト',
+ mission:'画面と処理をつないで動かし、期待どおりに動かないところ（バグ）を見つけて直そう',
+ intro:'3つの画面遷移をテストするよ。まず <b>▶ テスト実行</b> で「期待」と「実際」を見比べよう。違っていたら、処理の行の<b>順番</b>にバグがあるよ。行を入れかえて直そう！',
+ hints:['「実際」の結果がなぜそうなったか、上の行から順に追いかけてみよう。','どのテストも、2つの行の順番が入れかわっているだけだよ。'],
+ async onCheck(){const res=[];for(let i=0;i<3;i++)res.push(await run(i));const bad=res.findIndex(x=>!x);
+   if(bad>=0){const P=Ps[bad],c=CASES[bad];const wrong=P.slots().filter((s,i)=>P.get(s)!==c.correct[i]);Eng.errors(wrong.map(s=>({el:s,msg:s.dataset.hint})));return false}
+   Ps.forEach(P=>P.lock());return true},
+ doneMsg:'すべてのテストに合格！ 1つ1つの処理が正しくても、つなげたときの“順番”でバグが起きることがある。だから結合テストが大切なんだ。'});
+</script>

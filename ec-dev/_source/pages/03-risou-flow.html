@@ -1,0 +1,71 @@
+<!-- title: 理想の業務フローを可視化 -->
+<style>
+.g3{display:grid;grid-template-columns:300px 1fr 340px;height:711px}
+.info{padding:18px;border-right:1px solid var(--line);background:#fff;display:flex;flex-direction:column;gap:12px}
+.cmp{border-radius:12px;padding:12px 14px;font-size:12.5px;line-height:1.7}
+.cmp b{display:block;font-size:13px;margin-bottom:4px}
+.cmp.now{background:#fff5f5;border:1px solid #fbd0d0}.cmp.ideal{background:#f0fdf4;border:1px solid #bbf7d0}
+.board{position:relative;padding:18px 30px;display:flex;justify-content:center;gap:120px}
+.lane{width:250px;border:1.5px solid #c9ced6;border-radius:14px;background:#fff;display:flex;flex-direction:column;align-items:center;overflow:hidden}
+.lane .lh{width:100%;background:#2b2f36;color:#fff;font-weight:800;padding:10px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px}
+.lane .lb{display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:0;flex:1;width:100%}
+.nd{width:150px;height:96px}.slot.nd .piece{height:92px}
+.nd.fnode{flex-direction:column;justify-content:center;text-align:center;gap:3px;font-size:12px}
+.nd.fnode .ic{font-size:28px}
+.slot.nd .piece{flex-direction:column;text-align:center;justify-content:center;min-height:80px;font-size:12px;gap:3px}
+.slot.nd .piece .ic{font-size:28px}
+.va{color:#98a2b3;font-size:14px;height:22px;line-height:22px}
+.spacer{flex:1}
+.harrow{position:absolute;height:2px;background:#98a2b3}
+.harrow::after{content:"";position:absolute;top:-5px;border:6px solid transparent}
+.harrow.r::after{right:-2px;border-left:9px solid #98a2b3}.harrow.l::after{left:-2px;border-right:9px solid #98a2b3}
+.harrow span{position:absolute;top:-20px;left:0;right:0;text-align:center;font-size:11px;color:var(--sub);font-weight:700}
+.rc{padding:16px;border-left:1px solid var(--line);background:#fff;display:flex;flex-direction:column;gap:10px}
+.rc .pool .piece{width:100%}
+.tok{position:absolute;z-index:70;font-size:34px;transition:left .8s cubic-bezier(.5,0,.3,1),top .8s cubic-bezier(.5,0,.3,1);filter:drop-shadow(0 4px 8px rgba(0,0,0,.25));transform:translate(-50%,-50%)}
+.pulse{animation:pls .6s 2}
+@keyframes pls{50%{transform:scale(1.08);box-shadow:0 0 0 6px rgba(18,161,80,.25)}}
+</style>
+<div class="g3">
+  <div class="info">
+    <div class="ptitle">今の業務と理想の業務</div>
+    <div class="cmp now"><b>😣 今の業務（電話注文）</b>電話で注文を聞く → 紙に書き写す → 棚を見に行って在庫確認 → 包んで発送<br><span style="color:#b42318">聞き間違い・書き間違い・営業時間外は受けられない</span></div>
+    <div class="cmp ideal"><b>😊 理想の業務（ECサイト）</b>お客さんがスマホで注文すると、注文の内容が<b style="display:inline">データ</b>としてお店に届く。お店はそのデータを見て、商品を準備して発送する。</div>
+    <div class="cmp" style="background:#f8f9fb;border:1px solid var(--line)">✏️ お客さんの行動と、お店の作業を分けて書くと、だれが何をするかがわかりやすくなるよ（スイムレーン図）。</div>
+  </div>
+  <div class="board" id="board">
+    <div class="lane" id="laneC"><div class="lh">🙋 お客さん</div><div class="lb">
+      <div class="nd fnode" id="nOrder"><span class="ic">📱</span>スマホで注文する</div>
+      <div class="spacer"></div>
+      <div class="slot nd" id="nArrive" data-accept="arrive" data-hint="発送された商品は、最後にどうなる？ お客さんの手元に…"><span class="ph">？</span></div></div></div>
+    <div class="lane" id="laneS"><div class="lh">🏪 お店</div><div class="lb">
+      <div class="slot nd" id="nRecv" data-accept="recv" data-hint="お客さんがスマホで注文した内容は、“データ”としてお店に届くよ。電話ではないね。"><span class="ph">？</span></div><div class="va">▼</div>
+      <div class="nd fnode" id="nStock"><span class="ic">📋</span>在庫を確認する</div><div class="va">▼</div>
+      <div class="slot nd" id="nPick" data-accept="pick" data-hint="在庫があったら、棚から注文された商品を取り出すよ。"><span class="ph">？</span></div><div class="va">▼</div>
+      <div class="slot nd" id="nPack" data-accept="pack" data-hint="取り出した商品は、送る前に箱に詰めて準備するね。"><span class="ph">？</span></div><div class="va">▼</div>
+      <div class="nd fnode" id="nShip"><span class="ic">🚚</span>商品を発送する</div></div></div>
+  </div>
+  <div class="rc"><span class="tag" style="align-self:flex-start">選択肢</span><div class="pool" id="pool"></div>
+    <div class="legend dsc" style="background:#f8f9fb;border-radius:10px;padding:10px;font-size:12px">正解すると、注文データがお店に届いてから商品が到着するまでをアニメーションで確かめられるよ。</div></div>
+</div>
+<script>
+const P=new Puzzle({pool:$('#pool'),onChange:()=>setTimeout(arrows,30),pieces:{
+  recv:{label:'注文データを受け取る',icon:'🗂️'},pick:{label:'商品をピックアップする',icon:'🧺'},pack:{label:'発送の準備（梱包）をする',icon:'📦'},arrive:{label:'商品が届く',icon:'🏠'},
+  x1:{label:'電話で注文を聞く',icon:'📞'},x2:{label:'店頭で商品を渡す',icon:'🏪'},x3:{label:'紙の伝票に書き写す',icon:'📝'}}});
+function arrows(){$$('.harrow').forEach(e=>e.remove());const b=$('#board'),br=b.getBoundingClientRect(),k=$('#pg').getBoundingClientRect().width/1440;
+  const mk=(a,c,dir,t)=>{const ra=a.getBoundingClientRect(),rc=c.getBoundingClientRect();const L=dir==='r'?ra.right:rc.right,R=dir==='r'?rc.left:ra.left;
+    const e=h(`<div class="harrow ${dir}"><span>${t}</span></div>`);e.style.left=(L-br.left)/k+8+'px';e.style.width=(R-L)/k-16+'px';e.style.top=((ra.top+ra.bottom)/2-br.top)/k+'px';b.appendChild(e)};
+  mk($('#nOrder'),$('#nRecv'),'r','注文データ');mk($('#nShip'),$('#nArrive'),'l','配送')}
+arrows();
+async function fly(tok,el){const r=relRect(el);tok.style.left=r.cx+'px';tok.style.top=r.cy+'px';await sleep(850)}
+Page.init({id:'03',stage:'plan',title:'理想の業務フローを可視化',
+ mission:'ECサイトを使ったときの「理想の業務の流れ」を、お客さんとお店に分けて描こう',
+ intro:'今は電話で注文を受けているけれど、ECサイトにすると流れはどう変わるかな？ 空いている枠にカードを入れてね。',
+ hints:['ECサイトでは、注文は電話ではなく“データ”で届くよ。','お店の作業は「受け取る → 在庫確認 → 取り出す → 準備 → 発送」の順番。'],
+ async onCheck(){if(!P.judge())return false;P.lock();
+   const tok=h('<div class="tok">📄</div>');$('#pg').appendChild(tok);const o=relRect($('#nOrder'));tok.style.left=o.cx+'px';tok.style.top=o.cy+'px';await sleep(100);
+   $('#nOrder').classList.add('pulse');await sleep(300);
+   for(const [id,ic] of [['nRecv','📄'],['nStock','📋'],['nPick','🍇'],['nPack','📦'],['nShip','🚚'],['nArrive','🚚']]){tok.textContent=ic;await fly(tok,$('#'+id));$('#'+id).classList.add('pulse');}
+   tok.textContent='🎁';await sleep(400);tok.remove();toast('🎉 商品がお客さんに届きました！','ok');return true},
+ doneMsg:'理想の流れが描けたね！ 注文がデータで届けば、聞き間違いもなく、24時間注文を受けられる。次は「要件定義」で、関係者に話を聞いてみよう。'});
+</script>

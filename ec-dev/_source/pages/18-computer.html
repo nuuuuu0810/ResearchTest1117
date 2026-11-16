@@ -1,0 +1,69 @@
+<!-- title: コンピュータの動作 -->
+<style>
+.g2{display:grid;grid-template-columns:320px 1fr;height:711px}
+.mk{display:flex;justify-content:center;padding-top:14px;border-right:1px solid var(--line);background:#fff}
+.rt{padding:14px 20px;display:flex;flex-direction:column;gap:10px}
+.inside{position:relative;height:300px;background:#0f172a;border-radius:18px;padding:14px;color:#e2e8f0}
+.inside .tt{font-size:12px;font-weight:800;color:#94a3b8}
+.dev{position:absolute;width:150px;height:76px;border-radius:12px;background:#1e293b;border:2px solid #334155;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;gap:2px;transition:all .25s}
+.dev .ic{font-size:24px}.dev small{font-size:10px;color:#94a3b8;font-weight:600}
+.dev.on{border-color:#facc15;background:#3b3417;box-shadow:0 0 18px rgba(250,204,21,.5)}
+.sw{position:absolute;left:14px;right:14px;height:34px;border-radius:10px;border:2px dashed #475569;display:flex;align-items:center;padding:0 12px;font-size:12px;font-weight:800;gap:8px;transition:all .25s}
+.sw.on{border-color:#facc15;background:#3b3417}
+.wire{position:absolute;background:#334155}
+.dot{position:absolute;width:14px;height:14px;border-radius:50%;background:#facc15;box-shadow:0 0 12px #facc15;transform:translate(-50%,-50%);transition:left .55s,top .55s;z-index:3}
+.steps{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+.stp{display:grid;grid-template-columns:24px 1fr 150px;gap:8px;align-items:center;font-size:12px}
+.stp .n{width:22px;height:22px;border-radius:50%;background:#e9ecf1;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:11px}
+.stp.act .n{background:#111;color:#fff}.stp.okd .n{background:var(--ok);color:#fff}
+.stp .slot,.stp .fnode{min-height:38px;min-width:0}
+.stp .slot .piece,.stp .fnode{font-size:12px;padding:6px 8px}
+.pl{display:flex;gap:10px;align-items:center}
+.pl .pool .piece{padding:6px 10px}
+</style>
+<div class="g2">
+  <div class="mk" id="mock"></div>
+  <div class="rt">
+    <div class="inside" id="inside"><div class="tt">📱 スマホの中（ハードウェアとソフトウェア）</div>
+      <div class="sw" id="dApp" style="top:36px">🧭 アプリ（ブラウザ）<span style="font-weight:500;color:#94a3b8">… 目的に合わせた仕事をするソフトウェア</span></div>
+      <div class="sw" id="dOS" style="top:76px">⚙️ OS（基本ソフトウェア）<span style="font-weight:500;color:#94a3b8">… ハードウェアとアプリの仲立ち・全体の管理</span></div>
+      <div class="dev" id="dIn" style="left:20px;top:128px"><span class="ic">👆</span>入力装置<small>タッチパネル</small></div>
+      <div class="dev" id="dOut" style="left:20px;top:212px"><span class="ic">🖥️</span>出力装置<small>ディスプレイ</small></div>
+      <div class="dev" id="dCpu" style="left:230px;top:160px;width:170px;height:100px"><span class="ic">🧠</span>CPU<small>制御装置・演算装置</small></div>
+      <div class="dev" id="dMem" style="left:460px;top:128px"><span class="ic">🧩</span>主記憶装置<small>メモリ（一時的に置く）</small></div>
+      <div class="dev" id="dSto" style="left:460px;top:212px"><span class="ic">💾</span>補助記憶装置<small>ストレージ（ずっと保存）</small></div>
+    </div>
+    <div class="ptitle">ブラウザをタップしてから、サイトを検索するまで ― それぞれの仕事をするのは？</div>
+    <div class="steps" id="steps"></div>
+    <div class="pl"><span class="tag">選択肢</span><div class="pool" id="pool"></div></div>
+  </div>
+</div>
+<script>
+const DEV={in:['入力装置','👆','dIn'],out:['出力装置','🖥️','dOut'],cpu:['CPU（制御・演算）','🧠','dCpu'],mem:['主記憶装置（メモリ）','🧩','dMem'],sto:['補助記憶装置（ストレージ）','💾','dSto'],os:['OS','⚙️','dOS'],app:['アプリ（ブラウザ）','🧭','dApp']};
+const ST=[
+ ['in','ブラウザのアイコンをタップする（位置を読み取る）',1,'指でさわった位置を読み取るのは、タッチパネルのような“入力”の装置だよ。'],
+ ['os','どのアプリが押されたかを判断し、起動を指示する',1,'ハードウェアとアプリの間に立って、全体を管理する基本ソフトウェアは？'],
+ ['sto','ブラウザのプログラムを取り出す',1,'電源を切っても消えずに、アプリがずっと保存されている場所は？'],
+ ['mem','プログラムを一時的に置き、すぐ使えるようにする',1,'CPUがすぐに読めるように、作業中のデータを“一時的に”置く場所だよ。'],
+ ['cpu','命令を1つずつ読み取り、計算や指示をする',1,'コンピュータの頭脳。命令を解読（制御）して計算（演算）するのは？'],
+ ['out','検索画面を表示する',0],
+ ['in','「ショッピング」と文字を入力する',0],
+ ['app','検索結果のWebページを読み込んで表示する',1,'Webページを読み込んで見せる“目的のための”ソフトウェアは？']];
+$('#steps').innerHTML=ST.map(([k,t,s,hn],i)=>`<div class="stp" data-i="${i}"><span class="n">${i+1}</span><span>${t}</span>${s?`<div class="slot" data-accept="${k}" data-hint="${hn}"><span class="ph">？</span></div>`:`<div class="fnode fixed"><span class="ic">${DEV[k][1]}</span>${DEV[k][0]}</div>`}</div>`).join('');
+const pieces={};Object.entries(DEV).forEach(([k,v])=>pieces[k]={label:v[0],icon:v[1]});
+const P=new Puzzle({root:$('#steps'),pool:$('#pool'),pieces});
+const M=new Mock($('#mock'));M.go('home');
+let dot;function moveDot(id){const r=relRect($('#'+id)),b=relRect($('#inside'));if(!dot){dot=h('<div class="dot"></div>');$('#inside').appendChild(dot)}dot.style.left=(r.cx-b.x)+'px';dot.style.top=(r.cy-b.y)+'px'}
+const ACT=[async()=>{await M.go('home');await M.tap('browser')},async()=>{},async()=>{},async()=>{M.badge('⏳ 起動中…',{cls:'w',top:200})},async()=>{},async()=>{M.clearBadges();await M.go('search',{query:''})},async()=>{await M.type('q','ショッピング')},async()=>{await M.go('search',{query:'ショッピング'})}];
+Page.init({id:'18',stage:'des',title:'コンピュータの動作',nextLabel:'システム配置へ戻る ▶',
+ mission:'ブラウザをタップしてからサイトを検索するまで、スマホの中で何が起きているかを確かめよう',
+ intro:'スマホも立派なコンピュータ！ <b>5大装置</b>（入力・出力・記憶・制御・演算）と<b>ソフトウェア</b>がどう協力しているか、順番に当てはめよう。',
+ hints:['主記憶は「一時的」、補助記憶は「ずっと保存」。','OSは全体の管理役、アプリは目的の仕事をする役。'],
+ async onCheck(){const r=P.check();const bad=new Set([...r.wrong,...r.empty]);const rows=$$('.stp');rows.forEach(x=>x.classList.remove('okd','act'));M.clearBadges();
+   for(let i=0;i<ST.length;i++){const row=rows[i],node=$('.slot,.fnode',row);row.classList.add('act');
+     if(bad.has(node)){M.badge('⚠ 処理が止まってしまった…',{cls:'ng',top:200});Eng.point(node,node.dataset.hint);row.classList.remove('act');return false}
+     $$('.dev,.sw').forEach(d=>d.classList.remove('on'));const d=$('#'+DEV[ST[i][0]][2]);d.classList.add('on');moveDot(DEV[ST[i][0]][2]);
+     await ACT[i]();await sleep(650);row.classList.remove('act');row.classList.add('okd')}
+   $$('.dev,.sw').forEach(d=>d.classList.remove('on'));P.lock();M.hideFinger();return true},
+ doneMsg:'スマホの中の流れがわかったね！ 入力 → 記憶 → 制御・演算 → 出力。ハードウェアとソフトウェアが協力して、タップ1つで画面が動いているんだ。'});
+</script>

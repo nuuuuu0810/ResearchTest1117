@@ -1,0 +1,81 @@
+<!-- title: フロントエンド -->
+<style>
+.g3{display:grid;grid-template-columns:320px 1fr 330px;height:711px}
+.mk{display:flex;justify-content:center;padding-top:12px;border-right:1px solid var(--line);background:#fff}
+.fc{padding:12px 18px;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.rc{border-left:1px solid var(--line);background:#fff;padding:12px 14px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.rc .piece{width:100%}
+.lanes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lh{font-size:12px;font-weight:800;padding:6px 10px;border-radius:8px;color:#fff;text-align:center}
+.lh.h{background:#e2620c}.lh.c{background:#0a66d1}
+.nd{display:flex;flex-direction:column;gap:4px;border-left:5px solid #ccc;padding-left:8px;position:relative}
+.nd .tg{font-size:10.5px;font-weight:800;color:var(--sub)}
+.nd .slot{min-height:42px}
+.nd .slot .piece{font-size:12px;min-height:40px}
+.va{text-align:center;color:#b3bac5;font-size:10px;height:12px;line-height:12px}
+.k1{border-color:#0a66d1}.k2{border-color:#12a150}.k3{border-color:#7a5af8}.k4{border-color:#e2620c}.k5{border-color:#dd2590}
+.design{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:12px}
+.design .thumb{width:80px;height:120px;border-radius:12px;border:3px solid #111;overflow:hidden;background:#fff;display:flex;flex-direction:column;padding:4px;gap:3px}
+.code{background:#0f172a;color:#cbd5e1;border-radius:10px;padding:8px 12px;font-family:monospace;font-size:11px;line-height:1.55;white-space:pre;overflow:hidden;flex:1;min-height:0}
+.code .t{color:#f472b6}.code .a{color:#7dd3fc}.code .s{color:#fde68a}
+.mo{outline:2px dashed;outline-offset:2px;border-radius:6px}
+.tabs{display:flex;gap:6px}.tabs span{font-size:11.5px;font-weight:800;padding:5px 12px;border-radius:14px;background:#e9ecf1;color:#667085}.tabs span.on{background:#111;color:#fff}.tabs span.done{background:var(--okbg);color:var(--ok)}
+</style>
+<div class="g3">
+  <div class="mk" id="mock"></div>
+  <div class="fc"><div style="display:flex;align-items:center;gap:10px"><div class="ptitle" style="margin:0">処理：画面（HTML）と 装飾（CSS）</div><div class="tabs" id="tabs"><span>① 商品の表示</span><span>② カートボタン</span></div></div>
+    <div class="design" id="design"></div>
+    <div class="lanes"><div class="lh h">🧱 画面の部品（HTML）</div><div class="lh c">🎨 見た目の装飾（CSS）</div></div>
+    <div class="lanes" id="lanes"></div>
+    <div class="code" id="code"></div></div>
+  <div class="rc"><span class="tag" style="align-self:flex-start">ブロック</span><div class="pool" id="pool"></div></div>
+</div>
+<script>
+const M=new Mock($('#mock'));let stage=0,P;const G=PD.grape;
+const COL={k1:'#0a66d1',k2:'#12a150',k3:'#7a5af8',k4:'#e2620c',k5:'#dd2590'};
+const STG=[
+ {nodes:[['h','k1','img','画像','商品の写真を表示するブロックは？'],['c','k1','imgsz','画像の大きさ','デザイン案では、画像は画面の横はばいっぱいに大きく表示されているね。'],['h','k2','name','商品名','この画面はグレープの商品ページだよ。'],['c','k2','namesz','商品名の文字','デザイン案では、商品名は大きく太い文字だね。'],['h','k3','price','値段','グレープの値段を表示しよう。'],['c','k3','pricecol','値段の色','背景は白。読みやすい色はどっち？']],
+  pieces:{img:['🖼️ 画像「grape.png」を表示する','h'],x1:['🖼️ 画像「apple.png」を表示する','h'],imgsz:['↔️ 大きさ：横はば いっぱい','c'],x2:['↔️ 大きさ：横はば 30px','c'],name:['🔤 文字「グレープ」を表示する','h'],namesz:['🔠 文字：20px・太字','c'],x3:['🔠 文字：7px・細字','c'],price:['💴 文字「¥500」を表示する','h'],pricecol:['🎨 色：黒','c'],x4:['🎨 色：うすい黄色','c']}},
+ {nodes:[['h','k4','btn','ボタン','「カートに入れる」ボタンを表示しよう。'],['c','k4','btncol','ボタンの色','デザイン案のボタンは、黒い背景に白い文字だね。'],['c','k4','btnsz','ボタンの大きさ','指で押しやすい大きさは？'],['h','k5','fetch','押したときの動き','ボタンを押したら、サーバーに何をお願いする？']],
+  pieces:{btn:['🔘 ボタン「カートに入れる」を表示する','h'],btncol:['🎨 背景：黒・文字：白','c'],x5:['🎨 背景：白・文字：白','c'],btnsz:['↔️ 横はばいっぱい・高さ44px','c'],x6:['↔️ 横はば20px・高さ10px','c'],fetch:['📡 押したら：サーバーに「カートに追加」と問い合わせる','h'],x7:['📡 押したら：画面を真っ白にする','h']}}];
+function build(){const s=STG[stage];$$('#tabs span').forEach((e,i)=>e.className=i<stage?'done':i===stage?'on':'');Page.setStep(stage);
+ const H=s.nodes.filter(n=>n[0]==='h'),C=s.nodes.filter(n=>n[0]==='c');
+ const nd=n=>`<div class="nd ${n[1]}"><span class="tg">${n[3]}</span><div class="slot" data-accept="${n[2]}" data-hint="${n[4]}" data-k="${n[2]}"><span class="ph">ブロックを置く</span></div></div>`;
+ $('#lanes').innerHTML=`<div>${H.map(nd).join('<div class="va">▼</div>')}</div><div>${C.map(nd).join('<div class="va">▼</div>')}</div>`;
+ $('#design').innerHTML=stage===0?`<div class="thumb"><div style="height:46px;border-radius:6px;background:${G.bg};display:flex;align-items:center;justify-content:center;font-size:30px">🍇</div><b style="font-size:11px">グレープ</b><span style="font-size:9px">¥500</span></div><div>🎯 <b>デザイン案</b>（設計でつくった画面）<br>この見た目になるように、ブロックを組み合わせよう。<br><span style="color:var(--sub)">まちがえると、スマホにもそのまま表示されるよ。</span></div>`
+   :`<div class="thumb" style="justify-content:flex-end"><div style="height:16px;border-radius:8px;background:#111;color:#fff;font-size:7px;display:flex;align-items:center;justify-content:center">カートに入れる</div></div><div>🎯 <b>デザイン案</b><br>黒くて押しやすいボタン。押すとサーバーに問い合わせて、カートに商品が入る。</div>`;
+ const pieces={};Object.entries(s.pieces).forEach(([k,v])=>pieces[k]={label:v[0],cls:v[1]==='h'?'ph-h':'ph-c'});
+ if(P)P.lock(true);P=new Puzzle({root:$('#lanes'),pool:$('#pool'),pieces,onChange:live});live()}
+const v=k=>P&&P.get($(`#lanes .slot[data-k="${k}"]`));
+function live(){const S={};
+ if(stage===0){const img=v('img'),sz=v('imgsz'),nm=v('name'),ns=v('namesz'),pr=v('price'),pc=v('pricecol');
+  const em=img==='img'?'🍇':img==='x1'?'🍎':'';const full=sz==='imgsz';
+  const imH=!img?'<div class="im" style="background:#f2f4f7;font-size:12px;color:#98a2b3;border:2px dashed #d0d5dd">（画像なし）</div>':`<div class="im" style="background:${img==='img'?G.bg:PD.apple.bg};${full?'':sz==='x2'?'width:30px;height:30px;font-size:16px;':'width:120px;height:120px;font-size:64px;'}">${em}</div>`;
+  const nmH=nm?`<div class="nm" style="${ns==='namesz'?'':ns==='x3'?'font-size:7px;font-weight:300':'font-size:13px;font-weight:400'}">${nm==='name'?'グレープ':''}</div>`:'<div class="nm" style="color:#d0d5dd;font-size:12px">（商品名なし）</div>';
+  const prH=pr?`<div class="pr" style="color:${pc==='x4'?'#fff7c2':pc==='pricecol'?'#111':'#999'};font-weight:${pc?'900':'400'}">¥500</div>`:'<div class="pr" style="color:#d0d5dd;font-size:12px">（値段なし）</div>';
+  M.go('custom',{html:`<div class="shop">${shopHead({cart:[]})}<div class="dt"><div class="back">‹ 検索結果に戻る</div><span class="mo" style="outline-color:${COL.k1};border-radius:18px">${imH}</span><span class="mo" style="outline-color:${COL.k2}">${nmH}</span><span class="mo" style="outline-color:${COL.k3}">${prH}</span></div></div>`},{push:false,wait:0,label:'商品詳細（作成中）'});
+  $('#code').innerHTML=`<span class="t">&lt;img</span> <span class="a">src</span>=<span class="s">"${img==='img'?'grape.png':img==='x1'?'apple.png':'?'}"</span><span class="t">&gt;</span>
+<span class="t">&lt;h2&gt;</span>${nm==='name'?'グレープ':'?'}<span class="t">&lt;/h2&gt;</span>
+<span class="t">&lt;p class</span>=<span class="s">"price"</span><span class="t">&gt;</span>${pr?'¥500':'?'}<span class="t">&lt;/p&gt;</span>
+<span class="a">img</span>   { width: ${sz==='imgsz'?'100%':sz==='x2'?'30px':'?'}; }
+<span class="a">h2</span>    { font-size: ${ns==='namesz'?'20px; font-weight: bold':ns==='x3'?'7px; font-weight: 300':'?'}; }
+<span class="a">.price</span>{ color: ${pc==='pricecol'?'black':pc==='x4'?'lightyellow':'?'}; }`}
+ else{const b=v('btn'),bc=v('btncol'),bs=v('btnsz'),f=v('fetch');
+  const st=`${bc==='btncol'?'background:#111;color:#fff;':bc==='x5'?'background:#fff;color:#fff;border:1px solid #eee;':'background:#ddd;color:#555;'}${bs==='btnsz'?'':bs==='x6'?'height:10px;font-size:5px;margin-left:100px;margin-right:100px;':'height:30px;margin-left:50px;margin-right:50px;'}`;
+  M.go('detail',{sel:'grape',qty:1},{push:false,wait:0,label:'商品詳細（作成中）'}).then(()=>{const a=M.el('add');a.setAttribute('style',st);a.classList.add('mo');a.style.outlineColor=COL.k4;if(!b){a.style.visibility='hidden'}});
+  $('#code').innerHTML=`<span class="t">&lt;button</span> <span class="a">id</span>=<span class="s">"add"</span><span class="t">&gt;</span>${b?'カートに入れる':'?'}<span class="t">&lt;/button&gt;</span>
+<span class="a">#add</span> { ${bc==='btncol'?'background: black; color: white;':bc==='x5'?'background: white; color: white;':'?'}
+       ${bs==='btnsz'?'width: 100%; height: 44px;':bs==='x6'?'width: 20px; height: 10px;':'?'} }
+<span class="a">add</span>.onclick = () =&gt; ${f==='fetch'?'fetch(<span class="s">"/api/cart"</span>, {…})  <span style="color:#64748b">// サーバーに問い合わせ</span>':f==='x7'?'document.body.innerHTML = ""':'?'}`}}
+build();
+const st=document.createElement('style');st.textContent='.piece.ph-h{border-left:5px solid #e2620c}.piece.ph-c{border-left:5px solid #0a66d1}';document.head.appendChild(st);
+Page.init({id:'28',stage:'dev',title:'フロントエンド',steps:2,
+ mission:'スマホに表示される画面を、HTML（部品）とCSS（装飾）のブロックで組み立てよう',
+ intro:'お客さんが見る画面をつくるのが<b>フロントエンド</b>。オレンジ線のブロックは画面の部品（HTML）、青線は見た目の装飾（CSS）だよ。置いたブロックは、すぐスマホに反映されるよ。',
+ hints:['上の「デザイン案」と、左のスマホを見比べよう。','色付きの点線は、フローのどの部品がスマホのどこに表示されているかを表しているよ。'],
+ async onCheck(){if(!P.judge()){M.badge('⚠ デザイン案と違う表示になっている',{cls:'ng',top:12});setTimeout(()=>M.clearBadges(),1600);return false}
+  P.lock();if(stage===0){toast('✅ デザインどおり！','ok');await sleep(900);stage=1;build();Eng.say('商品の表示ができた！ 次は「カートに入れる」ボタン。見た目だけでなく、押したときの動きもつくろう。','ok');return false}
+  await M.tap('add');M.badge('📡 サーバーに問い合わせ中… /api/cart',{cls:'w',top:12});await sleep(900);M.clearBadges();await M.go('detail',{cart:[{id:'grape',qty:1}]},{push:false});const a=M.el('add');a.setAttribute('style','background:#111;color:#fff');
+  toast('🛒 カートに追加しました','ok');await M.tap('cartbtn');await M.go('cart',{cart:[{id:'grape',qty:1}]});M.hideFinger();return true},
+ doneMsg:'フロントエンド完成！ HTMLで部品を並べ、CSSで見た目を整え、ボタンからサーバーに問い合わせる。これで画面とバックエンドがつながったね。'});
+</script>

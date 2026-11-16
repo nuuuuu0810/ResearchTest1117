@@ -1,0 +1,52 @@
+<!-- title: 個人情報保護対応 -->
+<style>
+.pc{height:100%;background:#1f2430;color:#e5e7eb;padding:10px;font-size:10px;font-family:monospace}
+.pc .win{background:#fff;color:#111;border-radius:8px;overflow:hidden;font-family:inherit}
+.pc .wt{background:#e5e7eb;padding:4px 8px;font-weight:800;font-size:10px}
+.pc table{width:100%;border-collapse:collapse}.pc td{border-bottom:1px solid #eee;padding:3px 5px;font-size:9.5px}
+.chat2{padding:10px 12px;display:flex;flex-direction:column;gap:8px;font-size:11.5px}
+.chat2 .b{background:#f1f1f3;border-radius:12px;padding:8px 10px;max-width:85%;line-height:1.5}
+.chat2 .b.me{align-self:flex-end;background:#0a84ff;color:#fff}
+</style>
+<script>
+const shopOf=html=>`<div class="shop">${shopHead({cart:[]})}${html}</div>`;
+const EXTRA='<div class="fl">年収</div><div class="fi">500万円</div><div class="fl">家族構成</div><div class="fi">夫・子ども2人</div><div class="fl">勤務先</div><div class="fi">〇〇株式会社</div>';
+const CONSENT='<div style="font-size:9.5px;display:flex;gap:5px;align-items:center;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:5px 7px" data-k="consent">☑ <span><u style="color:#0a66d1">プライバシーポリシー</u>（利用目的：商品の発送とご連絡のため）に同意する</span></div>';
+const SC=new Scenes({riskLabel:'リスク',slotLabel:'必要な対応',
+ pieces:{
+  purpose:{label:'利用目的を伝え、同意をもらう <small>プライバシーポリシーを表示する</small>',icon:'📃'},
+  min:{label:'必要な情報だけを集める <small>使わない情報は入力させない</small>',icon:'✂️'},
+  third:{label:'本人の同意なく他の会社に渡さない <small>第三者提供の制限</small>',icon:'🚫'},
+  safe:{label:'安全に管理する <small>見られる人を限定・パスワード・暗号化</small>',icon:'🔐'},
+  del:{label:'本人の求めに応じて開示・訂正・削除する',icon:'🗑️'},
+  x1:{label:'個人情報を売って利益を出す',icon:'💰'},x2:{label:'全員の情報を公開して透明にする',icon:'📢'}},
+ list:[
+  {icon:'❓',where:'お客様情報の入力',title:'何に使うのか説明しないで情報を集める',short:'利用目的を説明していない',text:'お客様情報の画面で、名前や住所を入力させているのに、その情報を何に使うのかがどこにも書かれていない。',
+   accept:['purpose'],hint:'集める前に「何のために使うか」を伝えて、同意してもらうのがルールだよ。',ok:'利用目的を示し、同意してもらうチェックを付けたよ。',
+   async scene(m){await m.go('info',{filled:true,consent:'',extraFields:''});m.badge('🤔 この情報、何に使われるの…？',{cls:'w',top:12});await sleep(900);m.badge('⚠ 利用目的がどこにも書かれていない',{cls:'ng',bottom:110})},
+   async fix(m){await m.go('info',{filled:true,consent:CONSENT});m.hl('consent');await sleep(1400)}},
+  {icon:'📋',where:'お客様情報の入力',title:'必要のない情報まで入力させる',short:'必要以上の情報を集めている',text:'果物を届けるだけなのに、年収・家族構成・勤務先まで入力しないと注文できないようになっている。',
+   accept:['min'],hint:'商品を届けるのに、年収や家族構成は必要かな？',ok:'発送に必要な情報だけにしたよ。集める情報が少ないほど、流出したときの被害も小さくなるね。',
+   async scene(m){await m.go('info',{filled:true,consent:CONSENT,extraFields:EXTRA});m.badge('⚠ 年収・家族構成・勤務先…本当に必要？',{cls:'ng',top:200})},
+   async fix(m){await m.go('info',{filled:true,consent:CONSENT,extraFields:''});m.badge('✂️ 発送に必要な項目だけに',{cls:'ok',top:12});await sleep(1300)}},
+  {icon:'📤',where:'お店の管理画面',title:'お客さんのリストを他の会社に渡す',short:'無断で第三者に提供',text:'広告会社から「お客さんのリストを売ってほしい」と言われ、本人に聞かずにデータを送ろうとしている。',
+   accept:['third'],hint:'お客さん本人の同意なしに、ほかの会社へ個人情報を渡してはいけないよ。',ok:'本人の同意がない提供は断ったよ。',
+   async scene(m){await m.go('custom',{html:`<div class="pc"><div class="win"><div class="wt">📁 顧客リスト.csv → 送信先：広告会社</div><table>${['山田 花子','佐藤 太郎','鈴木 一郎','田中 美咲'].map(n=>`<tr><td>${n}</td><td>東京都…</td><td>090-…</td></tr>`).join('')}</table></div><div style="margin-top:14px;text-align:center">送信中… <span id="pb">▓▓▓▓▓░░░░</span></div></div>`},{label:'お店の管理画面'});
+     await sleep(900);m.badge('⚠ 本人の同意なしに、他の会社へ送ろうとしている！',{cls:'ng',top:250})},
+   async fix(m){await m.go('custom',{html:`<div class="pc"><div class="win"><div class="wt">送信を中止しました</div><div style="padding:14px;font-size:11px;text-align:center">🚫 本人の同意がないため<br>第三者への提供はできません</div></div></div>`},{label:'お店の管理画面'});await sleep(1300)}},
+  {icon:'💻',where:'お店のパソコン',title:'だれでも顧客データを見られる',short:'管理が不十分',text:'お店の共有パソコンで顧客データのファイルが開いたまま。パスワードは「1234」で、アルバイトも外部の人もだれでも見られる。',
+   accept:['safe'],hint:'見られる人を限定したり、パスワードを強くしたり、暗号化したりして守るよ。',ok:'見られる人を限定し、強いパスワードと暗号化で守ったよ。',
+   async scene(m){await m.go('custom',{html:`<div class="pc"><div class="win"><div class="wt">🔓 ログイン：パスワード「1234」</div><table>${['山田 花子','佐藤 太郎','鈴木 一郎','田中 美咲','高橋 健'].map(n=>`<tr><td>${n}</td><td>4980-xxxx…</td></tr>`).join('')}</table></div><div style="margin-top:12px;font-size:20px;text-align:center">🧍🧍‍♂️🧍‍♀️👀</div></div>`},{label:'お店のパソコン'});m.badge('⚠ だれでも顧客データを見られる状態',{cls:'ng',top:260})},
+   async fix(m){await m.go('custom',{html:`<div class="pc"><div class="win"><div class="wt">🔐 店長のみアクセス可</div><div style="padding:12px;font-size:10.5px;line-height:1.8">パスワード：●●●●●●●●●●●●<br>二段階認証：ON<br>保存データ：暗号化済み 🔒<br>閲覧記録：記録中</div></div></div>`},{label:'お店のパソコン'});await sleep(1300)}},
+  {icon:'🙋',where:'退会したお客さん',title:'「私の情報を消して」に応じない',short:'削除の求めに応じない',text:'退会したお客さんから「登録した情報を消してください」と連絡が来たのに、お店は「できません」と答えている。',
+   accept:['del'],hint:'本人には、自分の情報を見せてもらったり、直したり、消してもらったりするよう求める権利があるよ。',ok:'本人の求めに応じて、情報を削除したよ。',
+   async scene(m){await m.go('custom',{html:`<div class="chat2"><div class="b me">退会したので、登録した私の情報を消してください。</div><div class="b">申し訳ありませんが、できません。</div></div>`},{label:'お問い合わせ'});m.badge('⚠ 本人の求めを断っている',{cls:'ng',top:200})},
+   async fix(m){await m.go('custom',{html:`<div class="chat2"><div class="b me">退会したので、登録した私の情報を消してください。</div><div class="b">承知しました。ご本人確認のうえ、お客様の情報をすべて削除しました。🗑️</div></div>`},{label:'お問い合わせ'});await sleep(1300)}}
+ ]});
+Page.init({id:'09',stage:'req',title:'個人情報保護対応',steps:5,
+ mission:'個人情報保護法のルールにそって、お店の困った対応を直そう',
+ intro:'個人情報は「集める → 使う → 保管する → 渡す → 消す」のすべての場面でルールがあるよ（個人情報保護法）。場面を見て、必要な対応カードを選ぼう。',
+ hints:['いま問題になっているのが「集めるとき」「保管するとき」「渡すとき」のどれかを考えよう。'],
+ onCheck:()=>SC.check(),doneMsg:'個人情報を守る5つの対応ができたね。これらの約束は「プライバシーポリシー」としてサイトに載せるよ。'});
+SC.start();
+</script>

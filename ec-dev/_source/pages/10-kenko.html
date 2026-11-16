@@ -1,0 +1,41 @@
+<!-- title: 健康への影響調査 -->
+<style>
+.dark .screen{filter:invert(.9) hue-rotate(180deg) sepia(.25)}
+.tiny .pitem .nm{font-size:8px!important}.tiny .pitem .pr{font-size:7px!important}.tiny .pitem .st{font-size:6px!important}.tiny .rbar{font-size:6px!important}
+.big .pitem .nm{font-size:16px!important}.big .pitem .pr{font-size:15px!important}
+.night-clock{position:absolute;top:44px;left:0;right:0;text-align:center;font-weight:900;font-size:13px;color:#fff;background:rgba(0,0,0,.6);padding:3px;z-index:46}
+</style>
+<script>
+const SC=new Scenes({riskLabel:'健康へのリスク',slotLabel:'サイトでできる工夫',
+ pieces:{
+  night:{label:'夜間モードで画面を暗くする <small>ブルーライト・まぶしさをおさえる</small>',icon:'🌙'},
+  font:{label:'文字の大きさを変えられるようにする',icon:'🔠'},
+  limit:{label:'使った金額・回数をお知らせする <small>上限を自分で決められる</small>',icon:'📊'},
+  rest:{label:'休憩をうながすお知らせを出す',icon:'☕'},
+  x1:{label:'画面をもっと明るくする',icon:'🔆'},x2:{label:'1分ごとにセールの通知を送る',icon:'🔔'}},
+ list:[
+  {icon:'🌙',where:'夜中の2時',title:'夜遅くまで明るい画面を見続ける',short:'夜のまぶしい画面・睡眠不足',text:'寝る前にベッドで買い物をしていたら、明るい画面のせいで目がさえて眠れなくなってしまった。',
+   accept:['night'],hint:'夜に強い光（ブルーライト）を浴びると眠りにくくなるよ。画面を…',ok:'夜は画面を暗くできるようにしたよ。',
+   async scene(m){m.view.parentElement.classList.remove('dark');await m.go('results',{query:'くだもの'});m.ovl.appendChild(h('<div class="night-clock">🌙 午前 2:00</div>'));await sleep(500);m.badge('😵 まぶしくて眠れない…',{cls:'w',top:300})},
+   async fix(m){await m.go('results',{query:'くだもの'});m.scr.classList.add('dark');m.badge('🌙 夜間モード ON',{cls:'ok',top:300});await sleep(1400);m.scr.classList.remove('dark')}},
+  {icon:'👓',where:'検索結果',title:'小さい文字を見続けて目が疲れる',short:'小さな文字で目の疲れ',text:'商品一覧の文字が小さすぎて、画面に顔を近づけて読んでいる。目が疲れ、肩もこってきた。',
+   accept:['font'],hint:'見る人によって見やすい文字の大きさは違うね。',ok:'文字の大きさを自分で選べるようにしたよ。',
+   async scene(m){await m.go('results',{query:'くだもの'});m.view.firstElementChild.classList.add('tiny');m.badge('😣 文字が小さくて読めない…',{cls:'ng',top:330})},
+   async fix(m){await m.go('results',{query:'くだもの'});m.view.firstElementChild.classList.add('big');m.badge('🔠 文字サイズ：大',{cls:'ok',top:330});await sleep(1400)}},
+  {icon:'🛍',where:'買い物のしすぎ',title:'ついつい買い物がやめられない',short:'買い物依存のおそれ',text:'セールの通知が来るたびに買ってしまい、今月はもう30回も注文している。やめたいのにやめられない。',
+   accept:['limit'],hint:'使いすぎていることに自分で気づけるようにするには？',ok:'使った金額や回数を知らせ、上限を決められるようにしたよ。',
+   async scene(m){await m.go('cart',{cart:[{id:'pine',qty:3},{id:'grape',qty:4}]});for(let i=0;i<3;i++){const n=h(`<div class="notif" style="top:${6+i*58}px"><b>Shopping</b>⚡ タイムセール！今すぐ買わないと損！</div>`);m.ovl.appendChild(n);await sleep(380)}
+     m.badge('😰 今月30回目の注文…やめられない',{cls:'ng',bottom:120})},
+   async fix(m){await m.go('cart',{cart:[{id:'pine',qty:3},{id:'grape',qty:4}]});m.badge('📊 今月のお買い物：30回・¥42,000<br>設定した上限（¥20,000）をこえています。',{cls:'w',top:120});await sleep(1600)}},
+  {icon:'🧍',where:'長時間の利用',title:'同じ姿勢で長時間スマホを見る',short:'長時間同じ姿勢',text:'2時間ずっと下を向いて商品を見比べていたら、首や肩が痛くなってきた（いわゆるスマホ首）。',
+   accept:['rest'],hint:'長時間使い続けないように、ひと休みのきっかけをつくろう。',ok:'一定時間ごとに休憩をうながすようにしたよ。',
+   async scene(m){await m.go('top');m.ovl.appendChild(h('<div class="night-clock">⏱ 連続利用 2時間</div>'));m.badge('😖 首と肩が痛い…',{cls:'ng',top:300})},
+   async fix(m){await m.go('top');m.ovl.appendChild(h('<div class="notif"><b>Shopping</b>☕ 1時間たちました。少し休憩しませんか？</div>'));await sleep(1600)}}
+ ]});
+Page.init({id:'10',stage:'req',title:'健康への影響調査',steps:4,
+ mission:'ECサイトの使いすぎが体や心に与える影響を調べ、サイト側でできる工夫を考えよう',
+ intro:'便利なサイトほど、使いすぎてしまうこともあるね。スマホで再生される場面を見て、健康を守るためのサイトの工夫を選ぼう。',
+ hints:['「画面をもっと明るくする」「通知を増やす」は、かえって体に負担をかけてしまうね。'],
+ onCheck:()=>SC.check(),doneMsg:'健康への影響も「非機能要件」として考えておくと、長く安心して使えるサイトになるね。'});
+SC.start();
+</script>

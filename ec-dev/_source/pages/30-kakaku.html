@@ -1,0 +1,92 @@
+<!-- title: 価格設定 -->
+<style>
+.g2{display:grid;grid-template-columns:1fr 560px;gap:14px;padding:14px 16px;height:711px}
+.dash{display:flex;flex-direction:column;gap:10px;min-height:0}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.kpi{padding:10px 12px}
+.kpi small{font-size:11px;color:var(--sub);font-weight:700}
+.kpi b{display:block;font-size:22px;font-weight:900;margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi i{font-style:normal;font-size:11px;font-weight:800;color:var(--ok)}
+.row2{display:grid;grid-template-columns:1.25fr 1fr;gap:10px}
+.card{padding:10px 12px}
+.card table{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+.card td,.card th{padding:3px 6px;border-bottom:1px solid #f0f1f3;text-align:right}
+.card th{color:var(--sub);font-weight:800;font-size:11px}
+.card td:first-child,.card th:first-child{text-align:left}
+.cost td b{color:#111}
+.calc{padding:14px;display:flex;flex-direction:column;gap:10px}
+.fx{background:#0f172a;color:#e2e8f0;border-radius:12px;padding:12px 14px;font-size:13.5px;line-height:2.5;font-weight:700}
+.fx .slot{display:inline-flex;vertical-align:middle;min-width:104px;min-height:38px;margin:0 3px;background:#1e293b;border-color:#64748b}
+.fx .slot .piece{color:#111;min-height:34px;padding:4px 10px;justify-content:center;font-size:14px;font-variant-numeric:tabular-nums}
+.fx .slot .ph{color:#94a3b8}
+.fx .c{color:#7dd3fc}
+.fx .slot.price{border-color:#facc15;min-width:120px}
+.out{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.out div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.out small{font-size:11px;color:var(--sub);font-weight:700}
+.out b{display:block;font-size:20px;font-variant-numeric:tabular-nums}
+.out .neg{color:var(--ng)}
+.pred{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.pred div{border-radius:10px;padding:6px 8px;font-size:11px;text-align:center;background:#f8f9fb;border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.pred div b{display:block;font-size:13px}
+.pred .up{background:#f0fdf4;border-color:#bbf7d0;color:#166534}.pred .dn{background:#fff5f5;border-color:#fbd0d0;color:#991b1b}
+.tries{font-size:11.5px;color:var(--sub);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tries span{background:#f2f4f7;border-radius:8px;padding:2px 8px;font-weight:700;font-variant-numeric:tabular-nums}
+.pl .pool .piece{font-variant-numeric:tabular-nums}
+</style>
+<div class="g2">
+  <div class="dash">
+    <div class="ptitle" style="margin:0">📊 管理ダッシュボード：旬のフルーツ詰め合わせ（過去12か月）</div>
+    <div class="kpis"><div class="panel kpi"><small>年間の売上</small><b>¥6,188,600</b><i>▲ 前年比 +18%</i></div><div class="panel kpi"><small>年間の販売数</small><b>2,482 箱</b><i>▲ +12%</i></div><div class="panel kpi"><small>平均の価格</small><b>¥2,493</b><i style="color:var(--sub)">― 値段は毎月ちがう</i></div><div class="panel kpi"><small>リピート率</small><b>34%</b><i>▲ +5pt</i></div></div>
+    <div class="row2"><div class="panel card"><div class="ptitle">価格と販売数の関係（月ごと）</div><svg id="ch" width="100%" height="200" viewBox="0 0 470 230"></svg></div>
+      <div class="panel card"><div class="ptitle">月別データ</div><table id="tb"></table></div></div>
+    <div class="row2"><div class="panel card cost"><div class="ptitle">かかるお金（コスト）</div><table><tr><th>項目</th><th>金額</th><th>種類</th></tr><tr><td>📦 仕入れ値</td><td><b>1,200円</b> / 1箱</td><td>1箱ごと</td></tr><tr><td>🚚 送料</td><td><b>300円</b> / 1箱</td><td>1箱ごと</td></tr><tr><td>📢 広告費</td><td><b>70,000円</b> / 月</td><td>毎月決まった額</td></tr><tr><td>🖥️ サーバー代</td><td><b>30,000円</b> / 月</td><td>毎月決まった額</td></tr></table></div>
+      <div class="panel card"><div class="ptitle">データからわかる「予測の式」</div><div style="font-size:12.5px;line-height:1.8">月の販売数 ≒ <b>600 − 0.15 × 価格</b><br><span style="color:var(--sub)">（価格を上げると、売れる数は減る）<br>実際の販売数は、予測から ±25% くらいばらつく。</span></div></div></div>
+  </div>
+  <div class="panel calc">
+    <div class="ptitle" style="margin:0">💴 来月の価格をシミュレーション</div>
+    <div class="fx" id="fx">販売数 = <span class="c">600 − 0.15 ×</span> <span class="slot price" id="sP" data-accept="p2800" data-hint="利益の見込みが一番大きく、赤字の確率が5%未満の価格を探そう。下の「上げたら・下げたら」の予測がヒント！"><span class="ph">価格</span></span><br>
+      利益 = （ 価格 − <span class="slot" id="sC" data-accept="c1500" data-hint="1箱ごとにかかるお金は、仕入れ値と…送料もだね。たし算しよう。"><span class="ph">1箱の費用</span></span> ）× 販売数 − <span class="slot" id="sF" data-accept="f100k" data-hint="毎月決まってかかるお金をすべて合計しよう（広告費＋サーバー代）。"><span class="ph">毎月の固定費</span></span></div>
+    <div class="out"><div><small>販売数（平均）</small><b id="oN">—</b></div><div><small>利益の見込み（平均）</small><b id="oP">—</b></div><div><small>赤字になる確率</small><b id="oR">—</b></div></div>
+    <div><div class="ptitle">価格を変えたら？（予測）</div><div class="pred" id="pred"><div style="grid-column:1/5;color:var(--mut)">式のカードをすべて置くと、予測が出るよ</div></div></div>
+    <div class="tries" id="tries">試した価格：</div>
+    <div class="pl"><span class="tag">選択肢（数字）</span><div class="pool" id="pool" style="margin-top:6px"></div></div>
+    <div style="font-size:12px;color:var(--sub);line-height:1.6">🎯 目標：<b>利益の見込みが最大</b>で、<b>赤字になる確率が5%未満</b>の価格に決めよう。</div>
+  </div>
+</div>
+<script>
+const DATA=[['12月',2000,318],['1月',2000,296],['2月',2200,262],['3月',2400,248],['4月',2400,231],['5月',2600,222],['6月',3000,141],['7月',3000,159],['8月',3200,118],['9月',3400,96],['10月',2800,184],['11月',2600,207]];
+$('#tb').innerHTML='<tr><th>月</th><th>価格</th><th>販売数</th><th>売上</th></tr>'+DATA.map(d=>`<tr><td>${d[0]}</td><td>${d[1].toLocaleString()}</td><td>${d[2]}</td><td>${(d[1]*d[2]).toLocaleString()}</td></tr>`).join('');
+(function chart(){const X=p=>40+(p-1800)/(3600-1800)*410,Y=n=>200-n/350*180;let s=`<line x1="40" y1="200" x2="455" y2="200" stroke="#d0d5dd"/><line x1="40" y1="20" x2="40" y2="200" stroke="#d0d5dd"/>`;
+ [2000,2400,2800,3200,3600].forEach(p=>s+=`<text x="${X(p)}" y="216" font-size="10" text-anchor="middle" fill="#667085">${p}</text>`);[100,200,300].forEach(n=>s+=`<text x="34" y="${Y(n)+3}" font-size="10" text-anchor="end" fill="#667085">${n}</text><line x1="40" x2="455" y1="${Y(n)}" y2="${Y(n)}" stroke="#f0f1f3"/>`);
+ s+=`<line x1="${X(1800)}" y1="${Y(600-.15*1800)}" x2="${X(3600)}" y2="${Y(600-.15*3600)}" stroke="#0a66d1" stroke-width="2" stroke-dasharray="5 4"/>`;
+ DATA.forEach(d=>s+=`<circle cx="${X(d[1])}" cy="${Y(d[2])}" r="5" fill="#0a66d1" opacity=".85"><title>${d[0]} ${d[1]}円 ${d[2]}箱</title></circle>`);
+ s+=`<text x="455" y="14" font-size="10" text-anchor="end" fill="#667085">縦：販売数（箱）／横：価格（円）</text>`;$('#ch').innerHTML=s})();
+const PR=[1800,2200,2400,2600,2800,3000,3400,3800];const pieces={};PR.forEach(p=>pieces['p'+p]={label:'¥'+p.toLocaleString(),icon:'🏷️'});
+Object.assign(pieces,{c1200:{label:'1,200',icon:'📦'},c1500:{label:'1,500',icon:'📦'},c300:{label:'300',icon:'📦'},f70k:{label:'70,000',icon:'🗓️'},f100k:{label:'100,000',icon:'🗓️'},f30k:{label:'30,000',icon:'🗓️'}});
+const P=new Puzzle({root:$('#fx'),pool:$('#pool'),pieces,shuffle:false,onChange:calc});
+const val=id=>{const k=P.get($(id));return k?+k.replace(/^[pcf]/,'').replace('k','000'):null};
+const erf=x=>{const t=1/(1+.3275911*Math.abs(x));const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-.284496736)*t+.254829592)*t*Math.exp(-x*x);return x>=0?y:-y};
+const ncdf=z=>.5*(1+erf(z/Math.SQRT2));
+function sim(p,c,f){const n=Math.max(0,600-.15*p);const prof=(p-c)*n-f;const be=(p>c)?f/(p-c):Infinity;const sd=.25*n;const risk=n<=0?1:ncdf((be-n)/sd);return{n,prof,risk}}
+function calc(){const p=val('#sP'),c=val('#sC'),f=val('#sF');
+ if(p)$('#oN').textContent=Math.round(600-.15*p)+' 箱';else $('#oN').textContent='—';
+ if(p&&c!=null&&f!=null){const r=sim(p,c,f);$('#oP').textContent=yen(Math.round(r.prof));$('#oP').className=r.prof<0?'neg':'';$('#oR').textContent=(r.risk*100).toFixed(1)+' %';$('#oR').className=r.risk>=.05?'neg':'';
+   $('#pred').innerHTML=[-400,-200,200,400].map(d=>{const q=p+d;if(q<1600||q>4000)return'<div>—</div>';const s=sim(q,c,f);const up=s.prof>r.prof;return `<div class="${up?'up':'dn'}">${d>0?'+':''}${d}円 → ¥${q.toLocaleString()}<b>${yen(Math.round(s.prof))}</b>${up?'▲ 利益アップ':'▼ 利益ダウン'}</div>`}).join('')}
+ else{$('#oP').textContent='—';$('#oR').textContent='—'}}
+const tried=[];let tries=0;
+const TIPS=['いい調子！ 下の予測カードで「▲利益アップ」になる方向へ動かしてみよう。','価格を上げると1箱のもうけは増えるけど、売れる数は減る…。そのバランスが一番いいところを探そう。','安すぎると、たくさん売れても1箱のもうけが少なくて赤字になりやすいよ。','高すぎると、売れる数がぐっと減って利益が下がるね。'];
+Page.init({id:'30',stage:'ops',title:'価格設定',
+ mission:'過去の販売データとコストから、利益が一番大きくなる価格を見つけよう',
+ intro:'サイトを公開したら、データを見て改善するのが<b>管理運用</b>。まずはダッシュボードを読んで、式の<b>1箱の費用</b>と<b>毎月の固定費</b>を置こう。そのあと価格を試してね。',
+ hints:['1箱の費用 ＝ 仕入れ値 ＋ 送料。','固定費 ＝ 広告費 ＋ サーバー代（売れた数に関係なくかかる）。','予測カードの ▲ の方向へ動かすと、利益が大きくなるよ。','利益の見込みは「山なり」。上げすぎても下げすぎても下がるよ。'],
+ async onCheck(){const p=val('#sP'),c=val('#sC'),f=val('#sF');
+  if(c!==1500||f!==100000){const r=P.check();const w=[$('#sC'),$('#sF')].filter(s=>r.wrong.includes(s)||r.empty.includes(s));Eng.errors(w.map(s=>({el:s,msg:s.dataset.hint})));return false}
+  if(!p){Eng.point($('#sP'),'次は価格のカードを置いて、利益の見込みを確かめよう！',{type:'info',title:'エンジニアくんのポイント',below:true});return false}
+  tries++;if(!tried.includes(p)){tried.push(p);$('#tries').insertAdjacentHTML('beforeend',`<span>¥${p.toLocaleString()}：${yen(Math.round(sim(p,c,f).prof))}</span>`)}
+  if(p===2800){$('#sP').classList.add('ok-glow');$('#sC').classList.add('ok');$('#sF').classList.add('ok');P.lock();return true}
+  const r=sim(p,c,f);const best=sim(2800,c,f);let msg=r.risk>=.05?`赤字になる確率が ${(r.risk*100).toFixed(1)}% もある！ もっと安全な価格にしよう。`:TIPS[Math.min(tries-1,TIPS.length-1)];
+  if(p<2800)msg+=' （今の価格は少し“安め”みたい）';else msg+=' （今の価格は少し“高め”みたい）';
+  Eng.point($('#sP'),`試行 ${tries} 回目：利益 ${yen(Math.round(r.prof))}<br>${msg}`,{type:'info',title:'エンジニアくんのポイント',glow:false,below:true});return false},
+ doneMsg:'¥2,800 がベスト！ 利益の見込みが最大で、赤字の確率も約1%。データにもとづいて決めると、勘にたよるよりずっと確かだね。これでECサイト開発の全工程が完了！🎉'});
+</script>

@@ -1,0 +1,48 @@
+<!-- title: ネットワーク構成図 -->
+<style>
+#ph{position:absolute;left:30px;top:30px}
+.zone{position:absolute;border:2px dashed #c9ced6;border-radius:18px}
+.zone b{position:absolute;top:-11px;left:16px;background:var(--bg);padding:0 8px;font-size:12px;color:var(--sub)}
+#side .row{padding:5px 8px}#side .row .ic{font-size:18px}
+.fin{font-family:monospace;font-size:11px}
+</style>
+<div id="ph"></div>
+<div class="dg-line" style="left:290px;top:330px;width:150px"></div>
+<div class="dg-box" id="bWifi" style="left:440px;top:275px;width:120px;height:110px"><span class="ic">📶</span>Wi-Fi<small>ルーター</small></div>
+<div class="dg-line" style="left:560px;top:330px;width:120px"></div>
+<div class="dg-box" id="bNet" style="left:680px;top:265px;width:150px;height:130px"><span class="ic">🌐</span>インターネット<small>たくさんのルーター</small></div>
+<div class="dg-box" id="bDns" style="left:695px;top:80px;width:120px;height:100px"><span class="ic">📇</span>DNSサーバー</div>
+<div style="position:absolute;left:753px;top:180px;width:4px;height:85px;background:repeating-linear-gradient(#2b2f36 0 10px,transparent 10px 16px)"></div>
+<div class="dg-line" style="left:830px;top:330px;width:120px"></div>
+<div class="dg-box" id="bSv" style="left:950px;top:265px;width:140px;height:130px"><span class="ic">🖥️</span>Webサーバー<small>shopping.jp</small></div>
+<div class="dg-line" style="left:1090px;top:330px;width:60px"></div>
+<div class="dg-box" id="bDb" style="left:1150px;top:265px;width:110px;height:130px"><span class="ic">🗄️</span>データベース</div>
+<div id="a1" style="position:absolute;left:355px;top:350px;width:20px;height:10px"></div>
+<div id="a2" style="position:absolute;left:610px;top:300px;width:20px;height:10px"></div>
+<div id="a3" style="position:absolute;left:880px;top:350px;width:20px;height:10px"></div>
+<div id="a4" style="position:absolute;left:830px;top:125px;width:10px;height:10px"></div>
+<div class="panel hubside" id="side" style="top:400px;width:330px"><div class="ptitle">全体の動き</div><div id="finRows" style="display:flex;flex-direction:column;gap:6px"></div></div>
+<script>
+const M=new Mock($('#ph'),{nav:false});M.w.style.transform='scale(.9)';M.w.style.transformOrigin='top left';M.go('search',{query:'ショッピング'});
+const SUBS=[
+ {id:'21',file:'21-tcpip.html',label:'TCP/IP',desc:'通信のルール（4つの階層）',at:'#a1',pos:'below',say:'スマホとサーバーが会話するための“ルール”を見てみよう。'},
+ {id:'22',file:'22-packet.html',label:'パケット交換方式',desc:'データを小分けにして送る',at:'#a2',pos:'above',say:'大きなデータは、小さく分けて送っているよ。'},
+ {id:'23',file:'23-angou.html',label:'暗号化',desc:'カード番号を安全に送る',at:'#a3',pos:'below',say:'途中でのぞかれても大丈夫なように、データを暗号にするよ。'},
+ {id:'24',file:'24-setsuzoku.html',label:'接続の流れ',desc:'URLからサーバーを見つける',at:'#a4',pos:'right',say:'URLをクリックしてから、ページが届くまでの流れだよ。'}];
+$('#finRows').innerHTML=[['🔍','接続の流れ（DNS）','shopping.jp → 203.0.113.5'],['📜','TCP/IP','HTTP | TCP | IP | Wi-Fi'],['🧩','パケット交換','[1][2][3] 別々の道で'],['🔒','暗号化（HTTPS）','card=4980… → x9#Qa7!…']].map(r=>`<div class="row"><span class="ic">${r[0]}</span><span><b>${r[1]}</b><span class="fin">${r[2]}</span></span></div>`).join('');
+async function pk(txt,a,b,ms=900){const A=relRect(a),B=relRect(b);const p=h(`<div class="dg-pk">${txt}</div>`);$('#pg').appendChild(p);p.style.left=A.cx+'px';p.style.top=A.cy+'px';p.style.transition=`left ${ms}ms ease-in-out,top ${ms}ms ease-in-out`;await sleep(40);p.style.left=B.cx+'px';p.style.top=B.cy+'px';await sleep(ms+50);p.remove()}
+Page.init({id:'20',stage:'des',title:'ネットワーク構成図',steps:4,checkLabel:'全体の動きを見る',
+ mission:'スマホからサーバーまでの通信の道すじと、その中のルール・安全のしくみを確かめよう',
+ intro:'スマホのデータは、Wi-Fi・インターネットを通ってサーバーに届くよ。番号の順に、通信のしくみを体験しよう。',
+ onCheck:()=>Hub.check(),doneMsg:'ネットワーク構成図が完成！ ルール（TCP/IP）・小分け（パケット）・安全（暗号化）・道案内（DNS）がそろって、はじめてサイトが見られるんだね。'});
+Hub.init({subs:SUBS,async finale(){const r=$$('#finRows .row'),ph=$('#ph .scr');
+  await M.go('search',{query:'ショッピング'});await M.tap('r-shop');
+  r[0].classList.add('on');await pk('shopping.jp は？',ph,$('#bWifi'),600);await pk('shopping.jp は？',$('#bWifi'),$('#bNet'),600);await pk('shopping.jp は？',$('#bNet'),$('#bDns'),600);await pk('203.0.113.5',$('#bDns'),$('#bNet'),600);await pk('203.0.113.5',$('#bNet'),ph,900);
+  r[1].classList.add('on');r[3].classList.add('on');
+  await Promise.all([pk('[Wi-Fi|IP|TCP|HTTP|🔒x9#Q]',ph,$('#bWifi'),800)]);
+  r[2].classList.add('on');await Promise.all([pk('🧩1',$('#bWifi'),$('#bNet'),700),sleep(150).then(()=>pk('🧩2',$('#bWifi'),$('#bNet'),700)),sleep(300).then(()=>pk('🧩3',$('#bWifi'),$('#bNet'),700))]);
+  await Promise.all([pk('🧩1',$('#bNet'),$('#bSv'),700),sleep(200).then(()=>pk('🧩3',$('#bNet'),$('#bSv'),700)),sleep(400).then(()=>pk('🧩2',$('#bNet'),$('#bSv'),700))]);
+  await pk('商品データ',$('#bSv'),$('#bDb'),600);await pk('商品データ',$('#bDb'),$('#bSv'),600);
+  await pk('🔒 ページのデータ',$('#bSv'),$('#bNet'),700);await pk('🔒 ページのデータ',$('#bNet'),$('#bWifi'),700);await pk('🔒 ページのデータ',$('#bWifi'),ph,700);
+  await M.go('top');toast('🔒 https://shopping.jp を表示しました','ok');await sleep(1200);M.hideFinger()}});
+</script>

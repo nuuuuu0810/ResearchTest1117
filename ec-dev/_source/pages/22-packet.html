@@ -1,0 +1,73 @@
+<!-- title: パケット交換方式 -->
+<style>
+.g2{display:grid;grid-template-columns:320px 1fr;height:711px}
+.mk{display:flex;justify-content:center;padding-top:14px;border-right:1px solid var(--line);background:#fff}
+.rt{padding:14px 20px;display:flex;flex-direction:column;gap:12px}
+#net{position:relative;height:300px;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+#net svg{position:absolute;inset:0}
+.nd{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;font-size:11px;font-weight:800;gap:2px;z-index:2}
+.nd .ic{width:46px;height:46px;border-radius:50%;background:#fff;border:2px solid #2b2f36;display:flex;align-items:center;justify-content:center;font-size:22px}
+.nd.bad .ic{border-color:var(--ng);background:var(--ngbg)}
+.pk{position:absolute;transform:translate(-50%,-50%);z-index:3;background:#111;color:#fff;border-radius:7px;padding:3px 7px;font-size:11px;font-weight:800;white-space:nowrap;transition-timing-function:linear}
+.pk.big{background:#e5383b;padding:8px 14px;font-size:13px}
+.pk.lost{background:var(--ng);animation:boom .6s forwards}
+@keyframes boom{to{transform:translate(-50%,-50%) scale(2);opacity:0}}
+.risk{display:flex;gap:14px;align-items:center;padding:14px 16px}
+.risk .ic{font-size:30px;width:54px;height:54px;border-radius:14px;background:var(--ngbg);display:flex;align-items:center;justify-content:center;flex:none}
+.risk .lab{font-size:11px;font-weight:800;color:var(--ng)}
+.risk h3{margin:2px 0;font-size:16px}.risk p{margin:0;font-size:12.5px;color:#344054;line-height:1.6}
+.risk .slot{width:320px;min-height:54px;flex:none}
+.got{display:flex;gap:6px;align-items:center;font-size:12px;font-weight:800}
+.got span{min-width:34px;height:30px;border-radius:7px;background:#f2f4f7;display:flex;align-items:center;justify-content:center;padding:0 6px}
+.pl{display:flex;gap:10px;align-items:center}
+.rp{background:none;border:1px solid var(--line2);border-radius:16px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer}
+</style>
+<div class="g2">
+  <div class="mk" id="mock"></div>
+  <div class="rt">
+    <div id="net"><svg id="edges" width="100%" height="300"></svg></div>
+    <div style="display:flex;gap:16px;align-items:center"><div class="got">📱 スマホに届いた順：<span id="got" style="background:none"></span></div><button class="rp" id="replay">▶ 通信をもう一度見る</button></div>
+    <div class="panel risk" id="risk"></div>
+    <div class="pl"><span class="tag">選択肢</span><div class="pool" id="pool"></div></div>
+  </div>
+</div>
+<script>
+const N={S:[1000,150,'🖥️','サーバー'],R5:[800,150,'🔀','ルーター'],R2:[560,55,'🔀','ルーター'],R3:[560,150,'🔀','ルーター'],R4:[560,245,'🔀','ルーター'],R1:[320,150,'🔀','ルーター'],P:[110,150,'📱','スマホ'],U:[320,40,'👥','ほかの人']};
+const E=[['S','R5'],['R5','R2'],['R5','R3'],['R5','R4'],['R2','R1'],['R3','R1'],['R4','R1'],['R1','P'],['U','R1']];
+$('#edges').innerHTML=E.map(([a,b])=>`<line x1="${N[a][0]}" y1="${N[a][1]}" x2="${N[b][0]}" y2="${N[b][1]}" stroke="#c9ced6" stroke-width="3" data-e="${a}${b}"/>`).join('');
+Object.entries(N).forEach(([k,v])=>$('#net').appendChild(h(`<div class="nd" id="n${k}" style="left:${v[0]}px;top:${v[1]}px"><span class="ic">${v[2]}</span>${v[3]}</div>`)));
+const net=$('#net');
+async function travel(lbl,route,{dur=420,cls='',lose=null}={}){const p=h(`<div class="pk ${cls}">${lbl}</div>`);net.appendChild(p);const a=N[route[0]];p.style.left=a[0]+'px';p.style.top=a[1]+'px';await sleep(30);
+  for(let i=1;i<route.length;i++){const b=N[route[i]];p.style.transition=`left ${dur}ms linear,top ${dur}ms linear`;p.style.left=b[0]+'px';p.style.top=b[1]+'px';await sleep(dur);if(lose&&route[i]===lose){p.classList.add('lost');await sleep(600);p.remove();return false}}
+  p.remove();return true}
+const got=$('#got');const addGot=t=>got.appendChild(h(`<span>${t}</span>`));
+const RISK=[
+ {k:'split',risk:'大きなデータを1つのかたまりで送ると、回線をひとりじめしてしまう',txt:'写真つきのページはとても大きい。1つのかたまりのまま送ると、送り終わるまでその道をひとりじめして、ほかの人の通信が止まってしまう。',hint:'大きいまま送るのが問題。小さく…',
+  async before(){got.innerHTML='';const wait=travel('👥 待ってる…',['U','R1'],{dur:1800});await travel('🖼️ 写真データ（大きい）',['S','R5','R3','R1','P'],{dur:900,cls:'big'});await wait;addGot('🖼️')},
+  async after(){got.innerHTML='';const ps=[1,2,3,4].map((n,i)=>sleep(i*220).then(()=>travel('🧩',['S','R5','R3','R1','P'],{dur:420}).then(()=>addGot('🧩'))));ps.push(sleep(300).then(()=>travel('👥',['U','R1','P'],{dur:420})));await Promise.all(ps)}},
+ {k:'num',risk:'バラバラに届くと、元の順番に戻せない',txt:'小さく分けたパケットは、届く順番が入れかわることがある。どれが何番目かわからないと、写真を元どおりに組み立てられない。',hint:'それぞれのパケットに、何番目かがわかる情報を付けよう。',
+  async before(){got.innerHTML='';await Promise.all([3,1,4,2].map((n,i)=>sleep(i*200).then(()=>travel('🧩',['S','R5','R3','R1','P']).then(()=>addGot('🧩❓')))))},
+  async after(){got.innerHTML='';await Promise.all([3,1,4,2].map((n,i)=>sleep(i*200).then(()=>travel('🧩'+n,['S','R5','R3','R1','P']).then(()=>addGot(n)))));await sleep(300);got.innerHTML='';[1,2,3,4].forEach(addGot);toast('🔢 番号順に並べ直せた')}},
+ {k:'route',risk:'1つの道がこんでいたり、こわれていたりすると届かない',txt:'まん中のルーターが故障してしまった！ 同じ道だけを使っていると、パケットがそこで止まってしまう。',hint:'道は1本だけではないね。ネットワークの図をよく見よう。',
+  async before(){got.innerHTML='';$('#nR3').classList.add('bad');$('#nR3 .ic').textContent='✖';await Promise.all([1,2,3,4].map((n,i)=>sleep(i*200).then(()=>travel('🧩'+n,['S','R5','R3'],{lose:'R3'}))));addGot('…届かない')},
+  async after(){got.innerHTML='';const rt=[['S','R5','R2','R1','P'],['S','R5','R4','R1','P'],['S','R5','R2','R1','P'],['S','R5','R4','R1','P']];await Promise.all([1,2,3,4].map((n,i)=>sleep(i*200).then(()=>travel('🧩'+n,rt[i]).then(()=>addGot(n)))));toast('🔀 空いている道を通って届いた')}},
+ {k:'resend',risk:'途中でパケットが1つなくなってしまった',txt:'混雑したルーターで、3番のパケットが消えてしまった。このままでは写真の一部が欠けてしまう。',hint:'足りないことに気づいたら、もう一度送ってもらえばいいね。',
+  async before(){got.innerHTML='';const rt=[['S','R5','R2','R1','P'],['S','R5','R4','R1','P'],['S','R5','R2','R1','P'],['S','R5','R4','R1','P']];await Promise.all([1,2,3,4].map((n,i)=>sleep(i*200).then(()=>travel('🧩'+n,rt[i],{lose:n===3?'R2':null}).then(ok=>ok&&addGot(n)))));addGot('3が足りない！')},
+  async after(){got.innerHTML='';[1,2,4].forEach(addGot);await travel('「3をもう一度」',['P','R1','R4','R5','S'],{dur:300});await travel('🧩3',['S','R5','R4','R1','P']);got.innerHTML='';[1,2,3,4].forEach(addGot);toast('🔁 再送して全部そろった','ok')}}];
+const P=new Puzzle({root:$('#risk'),pool:$('#pool'),pieces:{
+ split:{label:'データを小さなパケットに分ける',icon:'🧩'},num:{label:'パケットに番号（順番）を付ける',icon:'🔢'},route:{label:'空いている道を選んで、別々に送る',icon:'🔀'},resend:{label:'届かなかったパケットを再送してもらう',icon:'🔁'},
+ x1:{label:'電話のように、回線を予約してひとりじめする',icon:'☎️'},x2:{label:'もっと大きなかたまりにまとめて送る',icon:'📦'}}});
+let i=0;const M=new Mock($('#mock'));M.go('detail',{sel:'grape'}).then(()=>{M.el('img').innerHTML='<span style="font-size:14px;color:#98a2b3">画像を受信中…</span>'});
+async function show(){const r=RISK[i];Page.setStep(i);$('#risk').innerHTML=`<div class="ic">⚠️</div><div style="flex:1"><div class="lab">リスク ${i+1} / 4</div><h3>${r.risk}</h3><p>${r.txt}</p></div><div class="slot" data-accept="${r.k}" data-hint="${r.hint}"><span class="ph">解決するしくみ</span></div>`;$('#risk .slot').dataset.ph0='<span class="ph">解決するしくみ</span>';
+  P.lock(true);Page.busy(true);await r.before();P.lock(false);Page.busy(false)}
+$('#replay').onclick=()=>RISK[i]&&RISK[i].before();
+Page.init({id:'22',stage:'des',title:'パケット交換方式',steps:4,nextLabel:'ネットワーク構成図へ戻る ▶',
+ mission:'インターネットで大きなデータを送るときの問題を見つけ、パケット交換方式のしくみで解決しよう',
+ intro:'サーバーからスマホへ、商品の写真を送るよ。通信のようすを見て、起きている問題を解決するしくみを選ぼう。',
+ hints:['インターネットは「小分け・番号・別々の道・再送」で、たくさんの人が同時に使えるようになっているよ。','回線をひとりじめするのは、昔の電話の「回線交換方式」だね。'],
+ async onCheck(){if(!P.judge())return false;P.lock(true);const r=RISK[i];await r.after();await sleep(500);i++;
+   if(i<RISK.length){await show();Eng.say('解決！ でも、まだ問題が起きるよ。','ok');return false}
+   $('#nR3').classList.remove('bad');$('#nR3 .ic').textContent='🔀';await M.go('detail',{sel:'grape'});M.hl('img');await sleep(1000);M.unhl();Page.setStep(4);return true},
+ doneMsg:'パケット交換方式のしくみがそろった！ データを小分けにすることで、回線をみんなで分け合い、故障やなくなったデータにも強くなるんだ。'});
+show();
+</script>

@@ -1,0 +1,58 @@
+<!-- title: データベース設計 -->
+<style>
+.g3{display:grid;grid-template-columns:320px 120px 1fr;height:711px}
+.mk{display:flex;justify-content:center;padding-top:14px;border-right:1px solid var(--line);background:#fff}
+.sv{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:12px;font-weight:800;position:relative;background:#fafbfc;border-right:1px solid var(--line)}
+.sv .ic{font-size:44px}
+.sv .ln{width:4px;height:70px;background:repeating-linear-gradient(#2b2f36 0 8px,transparent 8px 14px)}
+.cc{padding:14px 20px;display:flex;flex-direction:column;gap:12px}
+.tbls{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.tb{background:#fff;border:2px solid #2b2f36;border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.tb .th{background:#2b2f36;color:#fff;padding:8px 12px;font-weight:800;font-size:14px;display:flex;align-items:center;gap:6px}
+.tb .th small{font-weight:500;opacity:.8;font-size:11px;margin-left:auto}
+.tb .key{margin:8px 8px 0;display:flex;flex-direction:column;gap:4px}
+.tb .key div{font-size:12px;font-weight:800;background:#fff7e6;border:1px solid #fcd9a0;border-radius:8px;padding:6px 10px}
+.tb .key div small{font-weight:600;color:#b45309;margin-left:4px}
+.tb .slot.bin{margin:8px;min-height:230px;align-content:flex-start}
+.tb.lit{box-shadow:0 0 0 4px rgba(245,180,0,.5)}
+.pl{display:flex;gap:10px;align-items:flex-start}
+.note{font-size:12px;color:#344054;background:#f8f9fb;border-radius:10px;padding:8px 12px;line-height:1.6}
+</style>
+<div class="g3">
+  <div class="mk" id="mock"></div>
+  <div class="sv"><span class="ic">🖥️</span>サーバー<div class="ln"></div><span class="ic" id="dbi">🗄️</span>データベース</div>
+  <div class="cc">
+    <div class="note">🗄️ データベースは、データを<b>表（テーブル）</b>に分けて保存するよ。1つの表には同じ種類のデータをまとめ、<b>ID（キー）</b>で表どうしをつなぐ。<span style="color:#b45309;font-weight:800">オレンジの項目</span>は最初から決まっているよ。</div>
+    <div class="tbls">
+      <div class="tb" id="tP"><div class="th">🍇 商品テーブル<small>products</small></div><div class="key"><div>🔑 商品ID<small>主キー</small></div></div><div class="slot bin" id="bP" data-accept="pname|pimg|price|stock" data-hint="商品テーブルには「商品そのもの」の情報だけを入れるよ。"></div></div>
+      <div class="tb" id="tC"><div class="th">🙋 顧客テーブル<small>customers</small></div><div class="key"><div>🔑 顧客ID<small>主キー</small></div></div><div class="slot bin" id="bC" data-accept="cname|addr|tel|mail" data-hint="顧客テーブルには「お客さん」に関する情報を入れるよ。"></div></div>
+      <div class="tb" id="tO"><div class="th">🧾 注文テーブル<small>orders</small></div><div class="key"><div>🔑 注文ID<small>主キー</small></div><div>🔗 顧客ID<small>だれが</small></div><div>🔗 商品ID<small>何を</small></div></div><div class="slot bin" id="bO" data-accept="date|qty|paid" data-hint="注文テーブルには「いつ・いくつ・支払いは？」など、注文ごとに変わる情報を入れるよ。"></div></div>
+    </div>
+    <div class="pl"><span class="tag">選択肢（データ）</span><div class="pool" id="pool"></div></div>
+  </div>
+</div>
+<script>
+const P=new Puzzle({root:$('.tbls'),pool:$('#pool'),pieces:{
+ pname:{label:'商品名',icon:'🏷️'},pimg:{label:'商品の画像',icon:'🖼️'},price:{label:'1個の値段（単価）',icon:'💴'},stock:{label:'在庫数',icon:'📦'},
+ cname:{label:'名前',icon:'🙍'},addr:{label:'住所',icon:'🏠'},tel:{label:'電話番号',icon:'📞'},mail:{label:'メールアドレス',icon:'✉️'},
+ date:{label:'注文日時',icon:'🕒'},qty:{label:'注文した個数',icon:'🔢'},paid:{label:'支払い済みか',icon:'✅'},
+ x1:{label:'今日の天気',icon:'⛅'},x2:{label:'店員の好きな果物',icon:'❤️'}}});
+const M=new Mock($('#mock'));M.go('top');
+const ERR={bP:['results','商品一覧を表示できません','商品テーブルのデータがそろっていない'],bC:['info','お客様情報を保存できません','顧客テーブルのデータがそろっていない'],bO:['done','注文を登録できません','注文テーブルのデータがそろっていない']};
+async function flowTo(id){$('#'+id).classList.add('lit');$('#dbi').animate([{transform:'scale(1)'},{transform:'scale(1.25)'},{transform:'scale(1)'}],{duration:500});await sleep(350);$('#'+id).classList.remove('lit')}
+Page.init({id:'25',stage:'des',title:'データベース設計',
+ mission:'ECサイトに必要なデータを、商品・顧客・注文の3つのテーブルに分けて設計しよう',
+ intro:'バラバラに並んだデータを、正しいテーブルに入れよう。正しく設計できれば、サイトがデータを読み書きして動き出すよ。',
+ hints:['「だれのデータ？」「何のデータ？」「いつ・いくつ？」で分けよう。','ECサイトに関係のないデータは、どのテーブルにも入れないよ。'],
+ async onCheck(){const r=P.check();const bad=[...r.wrong,...r.empty];
+   const order=['bP','bC','bO'];
+   await M.go('top');await M.step('search');
+   for(const k of order){const b=$('#'+k);
+     if(bad.includes(b)){const e=ERR[k];await M.go('error',{errIcon:'🚫',errTitle:e[1],errText:e[2]},{label:'エラー'});P.judge();return false}
+     await flowTo(k==='bP'?'tP':k==='bC'?'tC':'tO');
+     if(k==='bP'){await M.step('select');await M.step('qty');await M.step('add');await M.step('opencart')}
+     if(k==='bC'){await M.step('pay')}
+     if(k==='bO'){await M.step('confirm')}}
+   P.judge();P.lock();M.hideFinger();return true},
+ doneMsg:'データベース設計が完成！ 表を分けてIDでつなぐと、同じデータを何度も書かずにすみ、まちがいも減らせるんだ。'});
+</script>

@@ -1,0 +1,54 @@
+<!-- title: セキュリティ対応 -->
+<style>
+.fake{height:100%;background:#fff7e6;display:flex;flex-direction:column;gap:6px;padding:10px 14px}
+.fake .url{background:#fee2e2;border-radius:8px;padding:5px 8px;font-size:10.5px;color:#b91c1c;font-weight:700}
+.fake h4{margin:6px 0 0;font-size:15px;color:#e11d48}
+.login{height:100%;display:flex;flex-direction:column;gap:8px;padding:16px}
+.login h4{margin:0 0 4px;font-size:16px}
+.cafe{height:100%;background:linear-gradient(#3b2f2a,#5b463c);color:#fff;padding:16px;display:flex;flex-direction:column;gap:12px;align-items:center;font-size:12px}
+.cafe .pk{background:#fff;color:#111;border-radius:8px;padding:6px 10px;font-family:monospace;font-size:10.5px;animation:fly 1.6s ease-in-out infinite}
+@keyframes fly{0%{transform:translateX(-60px);opacity:0}30%{opacity:1}100%{transform:translateX(60px);opacity:0}}
+.virus{height:100%;background:#111;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px;text-align:center}
+.virus .w{background:#dc2626;border-radius:12px;padding:12px;font-weight:900;font-size:13px;animation:blink .5s infinite alternate}
+@keyframes blink{to{opacity:.6}}
+</style>
+<style>.okurl{background:#dcfce7;color:#166534}</style>
+<script>
+const LOGIN=(u,p,extra='')=>`<div class="shop">${shopHead({cart:[]})}<div class="login"><h4>🔑 ログイン</h4><div class="fl">メールアドレス</div><div class="fi">${u}</div><div class="fl">パスワード</div><div class="fi">${p}</div>${extra}<div class="mbtn" style="margin-top:6px">ログイン</div></div></div>`;
+const SC=new Scenes({riskLabel:'セキュリティリスク',slotLabel:'対策',
+ pieces:{
+  url:{label:'URLと鍵マークを確かめる <small>公式アプリやブックマークから開く</small>',icon:'🔍'},
+  two:{label:'二段階認証にする <small>パスワード＋スマホに届く確認コード</small>',icon:'📲'},
+  upd:{label:'OS・アプリを最新にする <small>公式ストア以外から入れない・ウイルス対策ソフト</small>',icon:'🛡️'},
+  https:{label:'通信を暗号化する（HTTPS） <small>SSL/TLSでデータを読めなくする</small>',icon:'🔒'},
+  three:{label:'カードの本人認証（3Dセキュア）',icon:'💳'},
+  x1:{label:'パスワードを覚えやすい「1234」にする',icon:'🔢'},x2:{label:'同じパスワードをすべてのサイトで使う',icon:'♻️'}},
+ list:[
+  {icon:'🎣',where:'Web検索',title:'フィッシング詐欺',short:'偽サイト',text:'検索結果の広告から、本物そっくりの偽サイトに誘導され、カード情報を入力させられそうになる。',
+   accept:['url'],hint:'開いているページが本物かどうか、アドレス欄で確かめられるよ。',ok:'URLと🔒を確かめ、公式サイトから開くようにしたよ。',
+   async scene(m){await m.go('search',{query:'ショッピング',fake:true});await m.tap('r-fake');await m.go('custom',{html:`<div class="fake"><div class="url">⚠ http://shopping-jp.xyz/sale</div><h4>全品90%OFF!!</h4><div class="fl">カード番号</div><div class="fi"></div><div class="mbtn" style="background:#e11d48">今すぐ購入</div></div>`},{label:'偽サイト'});m.badge('⚠ 本物そっくりの偽サイト',{cls:'ng',top:300})},
+   async fix(m){await m.go('search',{query:'ショッピング',fake:true});m.hl('r-fake','mhl-ng');m.badge('❌ shopping-jp.xyz … 公式とちがう！',{cls:'w',top:12});await sleep(1000);m.unhl();m.clearBadges();await m.tap('r-shop');await m.go('top');m.badge('🔒 https://shopping.jp　公式サイトを確認',{cls:'ok',top:12});await sleep(1300)}},
+  {icon:'🎭',where:'ログイン',title:'なりすまし（不正ログイン）',short:'不正ログイン',text:'ほかのサイトから流出したパスワードで、犯人が勝手にログインしようとしている。',
+   accept:['two'],hint:'パスワードを知られても、本人のスマホがなければログインできない仕組みがあるよ。',ok:'二段階認証で、犯人はログインできなくなったよ。',
+   async scene(m){await m.go('custom',{html:LOGIN('hanako@example.jp','●●●●●●','<div style="font-size:10px;color:#b91c1c;font-weight:700">🕵️ 犯人がログインを試みています</div>')},{label:'ログイン'});m.badge('⚠ パスワードだけでは守れない',{cls:'ng',top:330})},
+   async fix(m){await m.go('custom',{html:LOGIN('hanako@example.jp','●●●●●●','<div class="fl">確認コード（SMSで届いた6けた）</div><div class="fi">______</div>')},{label:'二段階認証'});m.ovl.appendChild(h('<div class="notif"><b>メッセージ</b>Shoppingの確認コード：482915（本人のスマホにだけ届く）</div>'));await sleep(900);m.badge('🕵️ 犯人：コードがわからない…ログイン失敗',{cls:'ok',top:350});await sleep(1300)}},
+  {icon:'🦠',where:'ニセの警告',title:'マルウェア（ウイルス）',short:'マルウェア',text:'ニセの警告にだまされて、公式ストア以外からあやしいアプリを入れさせられそうになる。',
+   accept:['upd'],hint:'スマホを最新の状態にし、アプリは安全なところからだけ入れるようにしよう。',ok:'OSを最新にし、ウイルス対策ソフトがあやしいアプリを止めたよ。',
+   async scene(m){await m.go('custom',{html:`<div class="virus"><div style="font-size:50px">☠️</div><div class="w">⚠ ウイルスに感染しました！<br>このアプリを入れてください</div></div>`},{label:'ニセの警告'});m.badge('⚠ 公式ストア以外のアプリ',{cls:'ng',top:360})},
+   async fix(m){await m.go('custom',{html:`<div class="virus" style="background:#0b3d2e"><div style="font-size:50px">🛡️</div><div style="font-weight:900">危険なアプリをブロックしました</div><div style="font-size:11px">OS：最新（26.1）<br>ウイルス対策：有効</div></div>`},{label:'ウイルス対策'});await sleep(1500)}},
+  {icon:'👂',where:'カフェのWi-Fi',title:'盗聴（通信の盗み見）',short:'通信の盗み見',text:'暗号化されていない通信で、カード番号がそのまま読まれてしまう。',
+   accept:['https'],hint:'データを第三者には読めない形に変えて送る仕組みだよ。',ok:'HTTPSで暗号化したので、のぞかれても意味のわからない文字になったよ。',
+   async scene(m){await m.go('custom',{html:`<div class="cafe"><div style="font-size:40px">☕📶</div><div class="pk">card=4980123456789012</div><div style="font-size:40px">🕵️‍♂️💻</div></div>`},{label:'カフェのWi-Fi'});m.badge('⚠ カード番号が丸見え',{cls:'ng',top:300})},
+   async fix(m){await m.go('custom',{html:`<div class="cafe"><div style="font-size:40px">☕📶🔒</div><div class="pk">x9#Qa7!pL2@vR8z…</div><div class="pk" style="animation-delay:.5s">k3$Fm1^wZ0…</div><div style="font-size:40px">🕵️‍♂️❓</div><div>「読めない…」</div></div>`},{label:'暗号化された通信'});await sleep(1500)}},
+  {icon:'💳',where:'決済',title:'盗まれたカードでの不正な支払い',short:'カードの不正利用',text:'どこかで盗まれたカード番号を使って、犯人がShoppingで高い商品を注文しようとしている。',
+   accept:['three'],hint:'カード会社が「本当に本人か」をもう一度確かめる仕組みがあるよ。',ok:'カードの本人認証で、本人以外の支払いを止めたよ。',
+   async scene(m){await m.go('info',{filled:true,cart:[{id:'pine',qty:9}]});m.badge('🕵️ 盗んだカード番号で注文しようとしている',{cls:'ng',top:300})},
+   async fix(m){await m.go('custom',{html:`<div class="login"><h4>💳 カード会社の本人認証</h4><div style="font-size:11px;line-height:1.6">ご本人確認のため、カード会社のアプリで承認してください。</div><div class="fi">ワンタイムパスワード：______</div><div class="mbtn" style="background:#888">承認されていません</div></div>`},{label:'本人認証（3Dセキュア）'});m.badge('🛑 本人ではないので支払いできません',{cls:'ok',top:330});await sleep(1300)}}
+ ]});
+Page.init({id:'12',stage:'req',title:'セキュリティ対応',steps:5,
+ mission:'見つけたセキュリティリスクに、効果のある対策を当てはめよう',
+ intro:'前のページで見つけた手口に、どう対策すればいいかな？ 対策カードを置くと、スマホで「対策した後」の動きが見られるよ。',
+ hints:['「1234」や「使い回し」は、むしろ危険を増やしてしまうね。'],
+ onCheck:()=>SC.check(),doneMsg:'セキュリティ対策を要件に入れられたね。サイトをつくる側・使う側の両方で守ることが大切だよ。'});
+SC.start();
+</script>

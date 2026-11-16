@@ -1,0 +1,55 @@
+<!-- title: 個人情報保護の確認 -->
+<style>
+.g3{display:grid;grid-template-columns:330px 1fr 330px;height:711px}
+.mk{display:flex;justify-content:center;padding-top:14px;border-right:1px solid var(--line);background:#fff}
+.cc{padding:16px 20px;display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.bins{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.bin{min-height:200px}
+.bh{font-size:13px;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.bh small{font-weight:500;color:var(--sub);font-size:11px}
+.def{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.7}
+.st2{display:none;flex-direction:column;gap:8px}
+.st2.on{display:flex}
+.rr{display:grid;grid-template-columns:170px 1fr;gap:10px;align-items:center}
+.rr .k{font-weight:800;font-size:13px;background:#fdf2f8;border:1px solid #fbcfe8;border-radius:9px;padding:9px 10px}
+.rr .slot{min-height:42px}
+.rc{padding:14px 16px;border-left:1px solid var(--line);background:#fff;display:flex;flex-direction:column;gap:10px}
+.rc .piece{width:100%}
+.ptag{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:#db2777;color:#fff;font-size:9px;font-weight:800;border-radius:6px;padding:1px 6px}
+</style>
+<div class="g3">
+  <div class="mk" id="mock"></div>
+  <div class="cc">
+    <div class="def">🪪 <b>個人情報</b>とは、生きている人に関する情報で、<b>名前などから「だれのことか」がわかる情報</b>のこと。ほかの情報と組み合わせて、だれかがわかるものも含まれるよ。</div>
+    <div id="st1"><div class="ptitle">STEP 1　スマホの中にある情報を分けよう</div>
+      <div class="bins"><div><div class="bh">🔒 個人情報 <small>だれのことかわかる</small></div><div class="slot bin" id="b1" data-accept="name|addr|tel|mail|card|hist" data-hint="この中に、だれのことかわからない情報（お店や商品の情報）がまざっていないかな？"></div></div>
+      <div><div class="bh">📄 個人情報ではない <small>お店・商品の情報</small></div><div class="slot bin" id="b2" data-accept="item|price|stock|hours" data-hint="この中に、お客さん一人ひとりに関わる情報がまざっていないかな？"></div></div></div></div>
+    <div class="st2" id="st2"><div class="ptitle">STEP 2　もし流出したら、どんなリスクがある？</div>
+      <div class="rr"><div class="k">🏠 住所</div><div class="slot" data-accept="r1" data-hint="住所がわかると、家の場所がわかってしまうね。"><span class="ph">リスクを置く</span></div></div>
+      <div class="rr"><div class="k">💳 カード番号</div><div class="slot" data-accept="r2" data-hint="カード番号が知られると、お金に関わる被害が…"><span class="ph">リスクを置く</span></div></div>
+      <div class="rr"><div class="k">📞 電話番号</div><div class="slot" data-accept="r3" data-hint="電話番号が知られると、どんな連絡が来るかな？"><span class="ph">リスクを置く</span></div></div>
+      <div class="rr"><div class="k">✉️ メールアドレス</div><div class="slot" data-accept="r4" data-hint="メールアドレスにはどんなものが届く？ 本物そっくりのメールも…"><span class="ph">リスクを置く</span></div></div>
+      <div class="rr"><div class="k">🧾 購入履歴</div><div class="slot" data-accept="r5" data-hint="何を、いつ買ったかがわかると、その人の何がわかる？"><span class="ph">リスクを置く</span></div></div></div>
+  </div>
+  <div class="rc"><span class="tag" style="align-self:flex-start">選択肢</span><div class="pool" id="pool1"></div><div class="pool" id="pool2" style="display:none"></div></div>
+</div>
+<script>
+const MAP={name:'f-name',addr:'f-addr',tel:'f-tel',card:'f-card',mail:'f-mail'};
+const M=new Mock($('#mock'));M.go('info',{filled:true,extraFields:'<div class="fl">メールアドレス</div><div class="fi" data-k="f-mail">hanako@example.jp</div>',cart:[{id:'grape',qty:2}]});
+const P=new Puzzle({root:$('#st1'),pool:$('#pool1'),onChange:(s,id)=>{M.unhl();if(id&&MAP[id])M.hl(MAP[id])},pieces:{
+ name:{label:'名前',icon:'🙍'},addr:{label:'住所',icon:'🏠'},tel:{label:'電話番号',icon:'📞'},mail:{label:'メールアドレス',icon:'✉️'},card:{label:'クレジットカード番号',icon:'💳'},hist:{label:'購入履歴（だれが何を買ったか）',icon:'🧾'},
+ item:{label:'商品名',icon:'🍇'},price:{label:'商品の値段',icon:'💴'},stock:{label:'在庫数',icon:'📦'},hours:{label:'お店の営業時間',icon:'🕘'}}});
+const P2=new Puzzle({root:$('#st2'),pool:$('#pool2'),pieces:{
+ r1:{label:'家に押しかけられる・空き巣のねらいに',icon:'🏚️'},r2:{label:'勝手に買い物をされる',icon:'💸'},r3:{label:'迷惑電話・詐欺の電話がかかる',icon:'☎️'},r4:{label:'迷惑メール・偽メールが届く',icon:'📨'},r5:{label:'好みや生活のようすを知られる',icon:'👀'},x1:{label:'商品の値段が上がる',icon:'📈'}}});
+let step=0;
+Page.init({id:'08',stage:'req',title:'個人情報保護の確認',steps:2,
+ mission:'ECサイトがあつかう情報の中から個人情報を見つけ、流出したときのリスクを考えよう',
+ intro:'お客様情報の画面には、いろいろな情報があるね。カードを置くと、スマホの中の該当する場所が光るよ。',
+ hints:['「だれのことかわかる？」で考えよう。商品や店の情報は、だれか一人の情報ではないね。','購入履歴は「〇〇さんが何を買ったか」なので、個人と結びついているよ。'],
+ async onCheck(){
+  if(step===0){if(!P.judge())return false;P.lock();step=1;Page.setStep(1);M.unhl();
+    for(const k of ['f-name','f-addr','f-tel','f-mail','f-card']){const e=M.el(k);if(e){e.style.position='relative';e.appendChild(h('<span class="ptag">個人情報</span>'));e.classList.add('mhl-ng');await sleep(200)}}
+    $('#st2').classList.add('on');$('#pool1').style.display='none';$('#pool2').style.display='flex';Eng.say('個人情報が見つかったね！ 次は、それぞれが流出したらどんな被害があるかを考えよう。','ok');return false}
+  if(!P2.judge())return false;P2.lock();M.badge('🔐 個人情報は、大切に守る必要がある！',{cls:'w',top:10});return true},
+ doneMsg:'ECサイトはたくさんの個人情報をあずかるね。だからこそ、次の「個人情報保護対応」でしっかり守る仕組みを考えよう。'});
+</script>

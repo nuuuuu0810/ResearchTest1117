@@ -1,0 +1,56 @@
+<!-- title: 処理の流れ -->
+<style>
+.wrap{padding:16px 24px;display:flex;flex-direction:column;gap:12px}
+.st{display:grid;grid-template-columns:repeat(5,98px 160px) 98px;grid-template-columns:98px 158px 98px 158px 98px 158px 98px 158px 98px 158px 98px;align-items:start;justify-content:center}
+.thumb{display:flex;flex-direction:column;align-items:center;gap:6px}
+.thumb .nm{font-size:11.5px;font-weight:800;white-space:nowrap}
+.mini{width:98px;height:202px;border-radius:16px;background:#0d0f12;padding:4px;box-shadow:0 6px 16px rgba(0,0,0,.18);transition:box-shadow .3s,transform .3s}
+.mini .in{width:270px;height:556px;transform:scale(.3333);transform-origin:0 0;border-radius:36px;overflow:hidden;background:#fff;position:relative}
+.mini .in .view{top:42px}
+.mini.act{box-shadow:0 0 0 4px #f5b400,0 10px 24px rgba(0,0,0,.25);transform:translateY(-4px)}
+.tr{display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:58px}
+.tr .act{font-size:11.5px;font-weight:800;background:#111;color:#fff;border-radius:14px;padding:4px 10px;white-space:nowrap}
+.tr .ar{width:140px;height:3px;background:#111;position:relative}
+.tr .ar::after{content:"";position:absolute;right:-2px;top:-5px;border:6px solid transparent;border-left:9px solid #111}
+.tr .slot{width:150px;min-height:76px;margin-top:4px}
+.tr .slot .piece{font-size:11.5px;min-height:72px;padding:6px 8px}
+.tr .slot.act{box-shadow:0 0 0 4px rgba(245,180,0,.6)}
+.tr .lb{font-size:10px;color:var(--sub);font-weight:800}
+.lane{display:flex;align-items:center;gap:14px;background:#0f172a;color:#e2e8f0;border-radius:14px;padding:10px 18px;font-size:12.5px;font-weight:700}
+.lane .ic{font-size:26px}
+.lane .log{flex:1;font-family:monospace;font-size:12px;color:#7dd3fc;min-height:18px}
+.back{position:relative;height:26px;margin:0 auto;width:840px}
+.back div{position:absolute;left:0;right:0;top:0;height:16px;border:2px dashed #98a2b3;border-top:none;border-radius:0 0 12px 12px}
+.back span{position:absolute;left:50%;top:6px;transform:translateX(-50%);background:var(--bg);font-size:11px;font-weight:800;color:var(--sub);padding:0 6px}
+.pl{display:flex;gap:10px;align-items:flex-start}
+.pl .piece{max-width:330px}
+</style>
+<div class="wrap">
+  <div class="ptitle">画面遷移図：アクション ＋ 画面 ＝ スマホ ― 処理 ― サーバー</div>
+  <div class="st" id="st"></div>
+  <div class="back"><div></div><span>↩ 買い物を続ける（カート → トップ）</span></div>
+  <div class="lane"><span class="ic">🖥️</span>サーバーの処理<span class="log" id="log">― 答え合わせをすると、ここで処理が動くよ ―</span><span class="ic">🗄️</span></div>
+  <div class="pl"><span class="tag">選択肢（処理）</span><div class="pool" id="pool"></div></div>
+</div>
+<script>
+const SCR=[['top','トップページ'],['results','検索結果'],['detail','商品詳細'],['cart','カート'],['info','お客様情報'],['done','注文完了']];
+const TR=[['🔍 検索ボタン','search','検索語を受け取ったら、何をしないと結果が出せない？'],['👆 商品をタップ','fetch','商品詳細の画面に出す情報は、どこから持ってくる？'],['🛒 カートに入れる','cart','カートの画面に何が表示されている？ 商品・個数と…'],['➡ 情報の入力へ','stock','お客さんが情報を入力する前に、本当に買えるか確かめておこう。'],['✅ 注文を確定','reg','注文を確定したら、入力の確認と記録が必要だね。']];
+const S0={query:'くだもの',cart:[{id:'grape',qty:2},{id:'apple',qty:1}],sel:'grape',qty:2,filled:true};
+let html='';SCR.forEach(([k,n],i)=>{html+=`<div class="thumb"><div class="mini" data-i="${i}"><div class="in"><div class="sbar"><span>9:41</span><span></span></div><div class="view"><div class="screen">${SCREENS[k](S0)}</div></div></div></div><span class="nm">${n}</span></div>`;
+  if(i<TR.length)html+=`<div class="tr"><span class="act">${TR[i][0]}</span><div class="ar"></div><span class="lb">処理（サーバー）</span><div class="slot" data-accept="${TR[i][1]}" data-hint="${TR[i][2]}"><span class="ph">処理を置く</span></div></div>`});
+$('#st').innerHTML=html;
+const PROC={search:'商品DBから、検索語を含む商品を探して一覧にする',fetch:'選ばれた商品の名前・値段・画像をDBから取り出す',cart:'カートに商品と個数を追加し、合計金額を計算する',stock:'カートの商品の在庫が足りているか確かめる',reg:'入力をチェックし、注文をDBに登録する'};
+const LOG={search:"SELECT * FROM products WHERE name LIKE '%くだもの%'",fetch:"SELECT name, price, image FROM products WHERE id='grape'",cart:'cart.add(grape, 2); total = Σ(単価×個数) → ¥1,300',stock:'stock(grape)=8 ≥ 2 ✓  stock(apple)=12 ≥ 1 ✓',reg:"check(input) ✓ → INSERT INTO orders VALUES (...)"};
+const pieces={};Object.entries(PROC).forEach(([k,v])=>pieces[k]={label:v,icon:'⚙️'});pieces.x1={label:'お客さんの顔写真を撮る',icon:'📷'};pieces.x2={label:'商品をトラックに積む',icon:'🚚'};
+const P=new Puzzle({root:$('#st'),pool:$('#pool'),pieces});
+Page.init({id:'26',stage:'des',title:'処理の流れ',
+ mission:'画面が切りかわるとき、サーバーでどんな処理が動いているかを画面遷移図に書きこもう',
+ intro:'お客さんが操作（アクション）すると、サーバーが処理をして、次の画面が表示されるよ。矢印の下に、その間で動く<b>処理</b>を置こう。',
+ hints:['矢印の「後ろの画面」に表示されている内容を見ると、どんな処理が必要かわかるよ。','トラックや写真撮影は、サーバーの処理ではないね。'],
+ async onCheck(){const r=P.check();const bad=new Set([...r.wrong,...r.empty]);const minis=$$('.mini'),sl=$$('#st .slot');
+   for(let i=0;i<TR.length;i++){minis.forEach(m=>m.classList.remove('act'));minis[i].classList.add('act');await sleep(450);
+     sl[i].classList.add('act');if(bad.has(sl[i])){sl[i].classList.remove('act');$('#log').textContent='⚠ 処理が足りず、次の画面を表示できない';$('#log').style.color='#fca5a5';Eng.point(sl[i],sl[i].dataset.hint);minis.forEach(m=>m.classList.remove('act'));return false}
+     $('#log').style.color='';$('#log').textContent=LOG[TR[i][1]];await sleep(900);sl[i].classList.remove('act');sl[i].classList.add('ok')}
+   minis.forEach(m=>m.classList.remove('act'));minis[5].classList.add('act');P.lock();await sleep(600);return true},
+ doneMsg:'画面と処理がつながった！ この画面遷移図が、次の「開発」でプログラムを書くための設計図になるよ。'});
+</script>

@@ -1,0 +1,39 @@
+<!-- title: 画面レイアウト -->
+<script>
+const T=t=>({theme:t,textOnly:false});
+async function walk(m,name,patch,label){await m.go(name,Object.assign({theme:'',textOnly:false,query:'くだもの',cart:[{id:'grape',qty:2},{id:'apple',qty:1}],filled:true},patch),{label})}
+const SC=new Scenes({riskLabel:'見づらいところ',slotLabel:'デザインの工夫',
+ pieces:{
+  font:{label:'フォント（書体）の種類をそろえる',icon:'🔤'},size:{label:'見出し・本文など、文字の大きさに決まりをつくる',icon:'🔠'},
+  img:{label:'商品の写真を大きく見せる',icon:'🖼️'},cont:{label:'背景と文字の色の差（コントラスト）を大きくする',icon:'🌓'},
+  btn:{label:'ボタンを押しやすい大きさにし、入力欄に項目名を付ける',icon:'👆'},
+  x1:{label:'すべての文字を太字の赤色にする',icon:'🟥'},x2:{label:'できるだけたくさんの色を使う',icon:'🌈'}},
+ list:[
+  {icon:'🔤',where:'トップページ',title:'フォントがバラバラ',short:'フォントがバラバラ',text:'ロゴは筆記体、値段は等幅、カテゴリは手書き風…。書体が場所ごとに違って、まとまりがなく読みにくい。',
+   accept:['font'],hint:'いろいろな書体がまざっていることが問題。ルールを決めて…',ok:'フォントを1種類にそろえて、すっきりしたね。',
+   async scene(m){await walk(m,'top',{},'トップページ');await sleep(300);await walk(m,'top',{theme:'th-font'},'トップページ（崩れ）');m.badge('😵 書体がバラバラで読みにくい',{cls:'ng',bottom:20})},
+   async fix(m){await walk(m,'top',{theme:''},'トップページ（修正後）');m.badge('✅ フォントを統一',{cls:'ok',bottom:20});await sleep(1300);await m.tap('cat-fruit')}},
+  {icon:'🔠',where:'検索結果',title:'文字の大きさがめちゃくちゃ',short:'文字の大きさがバラバラ',text:'商品名がとても小さいのに、値段だけ大きかったり、一部の商品名だけ大きかったり。どこが大事な情報かわからない。',
+   accept:['size'],hint:'見出し・商品名・説明など、役割ごとに大きさを決めると、情報の大切さが伝わるよ。',ok:'役割ごとに文字の大きさを決めたよ。',
+   async scene(m){await walk(m,'results',{theme:'th-size'},'検索結果（崩れ）');m.badge('🤔 どれが商品名？どれが大事？',{cls:'ng',bottom:20})},
+   async fix(m){await walk(m,'results',{theme:''},'検索結果（修正後）');m.badge('✅ 文字の大きさにルール',{cls:'ok',bottom:20});await sleep(1200);await m.tap('p-grape')}},
+  {icon:'📝',where:'商品詳細',title:'文字だけで商品がわからない',short:'文字だけの画面',text:'商品ページに写真がなく、文字だけで説明されている。どんな果物なのか、ひと目でイメージできない。',
+   accept:['img'],hint:'果物の色やみずみずしさは、文字より何で伝えるとわかりやすい？',ok:'写真を大きく見せて、ひと目でわかるようにしたよ。',
+   async scene(m){await walk(m,'detail',{sel:'grape',qty:2,textOnly:true},'商品詳細（崩れ）');m.badge('🤷 どんなブドウなの…？',{cls:'ng',top:200})},
+   async fix(m){await walk(m,'detail',{sel:'grape',qty:2},'商品詳細（修正後）');m.badge('✅ 写真で伝える',{cls:'ok',top:200});await sleep(1200);await m.tap('cartbtn')}},
+  {icon:'🎨',where:'カート',title:'色が見づらい',short:'色のコントラスト不足',text:'カートの背景が黄色で、文字も黄色っぽい。合計金額やボタンがほとんど読めない。',
+   accept:['cont'],hint:'背景と文字が似た色だと読めないね。明るさの差を…',ok:'背景と文字の色の差を大きくして、読みやすくなったよ。',
+   async scene(m){await walk(m,'cart',{theme:'th-color'},'カート（崩れ）');m.badge('😣 文字が背景にとけて読めない',{cls:'ng',top:120})},
+   async fix(m){await walk(m,'cart',{theme:''},'カート（修正後）');m.badge('✅ コントラストを確保',{cls:'ok',top:120});await sleep(1200);await m.tap('toinfo')}},
+  {icon:'👆',where:'お客様情報',title:'ボタンが小さく、入力欄の意味がわからない',short:'押しにくいボタン・項目名なし',text:'注文ボタンがとても小さくて押しにくい。入力欄に項目名がなく、何を書けばいいかわからない。',
+   accept:['btn'],hint:'指で押すスマホでは、ボタンの大きさがとても大事。入力欄には…',ok:'押しやすいボタンと、わかりやすい項目名にしたよ。',
+   async scene(m){await walk(m,'info',{theme:'th-btn',filled:false},'お客様情報（崩れ）');m.hl('confirm','mhl-ng');m.badge('😖 ボタンが押せない…何を入力するの？',{cls:'ng',top:110})},
+   async fix(m){await walk(m,'info',{theme:'',filled:true},'お客様情報（修正後）');await m.tap('confirm');await walk(m,'done',{},'注文完了');await sleep(800)}}
+ ]});
+Page.init({id:'14',stage:'des',title:'画面レイアウト',steps:5,
+ mission:'トップページから購入完了まで、見づらい画面をデザインの工夫で直そう（情報デザイン）',
+ intro:'スマホがトップページから購入まで進んでいくよ。崩れた画面が出てきたら、それを直す<b>デザインの工夫</b>を選んでね。',
+ hints:['「見やすさ・わかりやすさ・使いやすさ」の3つの点から考えよう。','色を増やしたり、全部を強調したりすると、かえって大事なところがわからなくなるよ。'],
+ onCheck:()=>SC.check(),doneMsg:'すべての画面が見やすくなった！ だれにとっても使いやすいデザイン（ユニバーサルデザイン）を意識できたね。'});
+SC.start();
+</script>

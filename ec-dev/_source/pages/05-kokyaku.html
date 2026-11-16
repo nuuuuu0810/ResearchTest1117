@@ -1,0 +1,88 @@
+<!-- title: 顧客の分析 -->
+<style>
+.g3{display:grid;grid-template-columns:380px 1fr 430px;gap:14px;height:711px;padding:14px}
+.tbl{display:flex;flex-direction:column;padding:12px;min-height:0}
+.tw{flex:1;overflow:hidden;border:1px solid var(--line);border-radius:8px;position:relative}
+.tw table{width:100%;border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-nums}
+.tw th{position:sticky;top:0;background:#f2f4f7;font-weight:800;padding:5px 6px;text-align:left;border-bottom:1px solid var(--line);z-index:1}
+.tw td{padding:3px 6px;border-bottom:1px solid #f1f2f4}
+.tw tr.hit td{background:#fff3b0}
+.tw .scroller{height:100%;overflow-y:auto}
+.cnt{font-size:11px;color:var(--sub);margin-top:6px}
+.proc{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+.fx{background:#0f172a;color:#e2e8f0;border-radius:12px;padding:16px;font-size:14px;line-height:2.4;font-weight:700}
+.fx .slot{display:inline-flex;min-width:150px;min-height:40px;vertical-align:middle;margin:0 4px;border-color:#64748b;background:#1e293b}
+.fx .slot .ph{color:#94a3b8}
+.fx .slot.filled .piece{background:#fff;color:#111}
+.fx .kw{color:#7dd3fc}
+.grp{display:flex;flex-direction:column;gap:6px}
+.grp .pool .piece{flex-direction:column;align-items:flex-start;gap:2px;width:calc(50% - 5px)}
+.grp .pool .piece small{font-weight:500;color:var(--sub);font-size:10.5px}
+.st2{opacity:.35;pointer-events:none;transition:opacity .4s}
+.st2.on{opacity:1;pointer-events:auto}
+.goal{background:#f0f7ff;border:1px solid #c7ddfb;border-radius:10px;padding:8px 12px;font-size:12.5px}
+.res{padding:14px;display:flex;flex-direction:column;gap:10px}
+.rtab{width:100%;border-collapse:collapse;font-size:12.5px}
+.rtab td,.rtab th{border:1px solid var(--line);padding:5px 8px;text-align:center}
+.rtab th{background:#f2f4f7}
+#chart{height:250px;border:1px solid var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:12px;background:#fcfcfd}
+.ins{background:#111;color:#fff;border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.6;display:none}
+.slotC{min-height:48px}
+</style>
+<div class="g3">
+  <div class="panel tbl"><div class="ptitle">顧客データ（customers.csv）</div><div class="tw"><div class="scroller" id="scr"><table id="tb"></table></div></div><div class="cnt" id="cnt"></div></div>
+  <div class="panel proc">
+    <div class="ptitle">処理 ① どんな計算をする？</div>
+    <div class="goal">🎯 目的：<b>年代ごとに、お客さんが何人いるか</b>を知りたい</div>
+    <div id="st1" style="display:flex;flex-direction:column;gap:12px"><div class="fx">年代ごとに、<span class="kw">顧客データ</span> の <span class="slot" id="sCol" data-accept="age" data-hint="年代ごとに分けたいから、どの列を見ればいい？ “何歳か”が書いてある列だね。"><span class="ph">列を選ぶ</span></span> を見て<br>その人数を <span class="slot" id="sFn" data-accept="count" data-hint="知りたいのは“人数”。値を足したり平均したりするのではなく、行の数を…"><span class="ph">関数を選ぶ</span></span></div>
+    <div class="grp"><span class="tag" style="align-self:flex-start">選択肢</span><div class="pool" id="pool1"></div></div></div>
+    <div class="st2" id="st2"><div class="ptitle" style="margin-top:4px">処理 ② 結果をどのグラフで見せる？</div>
+      <div style="display:flex;gap:10px;align-items:center"><span style="font-size:12.5px;font-weight:700">グラフの種類：</span><div class="slot slotC" id="sCh" data-accept="bar" style="flex:1" data-hint="年代ごとの人数の「多い・少ない」を比べたいね。量の大小を比べるのが得意なグラフは？"><span class="ph">グラフを選ぶ</span></div></div>
+      <div class="pool" id="pool2" style="margin-top:8px"></div></div>
+  </div>
+  <div class="panel res"><div class="ptitle">結果</div><table class="rtab" id="rt"><tr><td style="color:#98a2b3">処理を選んで「答え合わせ」すると、ここに結果が出るよ</td></tr></table><div id="chart">グラフ</div><div class="ins" id="ins"></div></div>
+</div>
+<script>
+/* --- 顧客データを作る（毎回同じ） --- */
+let seed=7;const rnd=()=>(seed=(seed*9301+49297)%233280)/233280;
+const AG=[[10,6],[20,18],[30,15],[40,10],[50,7],[60,4]];const AREA=['東京','大阪','愛知','福岡','北海道','宮城'];const rows=[];
+AG.forEach(([a,n])=>{for(let i=0;i<n;i++)rows.push({age:a+Math.floor(rnd()*10),area:AREA[Math.floor(rnd()*6)],buy:1+Math.floor(rnd()*12)})});
+rows.sort(()=>rnd()-.5);rows.forEach((r,i)=>r.id='C'+String(1001+i));
+$('#tb').innerHTML='<tr><th>会員ID</th><th>年齢</th><th>地域</th><th>購入回数</th></tr>'+rows.map(r=>`<tr><td>${r.id}</td><td>${r.age}</td><td>${r.area}</td><td>${r.buy}</td></tr>`).join('');
+$('#cnt').textContent=`全 ${rows.length} 件`;
+const LBL=['10代','20代','30代','40代','50代','60代〜'];
+const P=new Puzzle({root:$('#st1'),pool:$('#pool1'),pieces:{
+ age:{label:'年齢 の列',icon:'🎂'},area:{label:'地域 の列',icon:'🗾'},buy:{label:'購入回数 の列',icon:'🛍'},
+ count:{label:'数える <small>COUNT：当てはまる行の数</small>',icon:'🔢'},sum:{label:'合計する <small>SUM：値をすべて足す</small>',icon:'➕'},avg:{label:'平均する <small>AVERAGE：平均値</small>',icon:'➗'},max:{label:'最大値 <small>MAX：一番大きい値</small>',icon:'🔝'}}});
+const P2=new Puzzle({root:$('#st2'),pool:$('#pool2'),pieces:{
+ bar:{label:'棒グラフ <small>量の大小を比べる</small>',icon:'📊'},line:{label:'折れ線グラフ <small>時間による変化</small>',icon:'📈'},pie:{label:'円グラフ <small>全体の中の割合</small>',icon:'🥧'},sc:{label:'散布図 <small>2つの量の関係</small>',icon:'⚬'}}});
+let step=0;
+function groups(col){if(col==='area')return AREA.map(a=>[a,rows.filter(r=>r.area===a)]);if(col==='buy')return [['1〜4回',rows.filter(r=>r.buy<5)],['5〜8回',rows.filter(r=>r.buy>=5&&r.buy<9)],['9回〜',rows.filter(r=>r.buy>=9)]];
+  return LBL.map((l,i)=>[l,rows.filter(r=>Math.min(5,Math.floor(r.age/10)-1)===i)])}
+function calc(col,fn){const key=col==='age'?'age':col==='buy'?'buy':'age';return groups(col).map(([l,rs])=>{const v=rs.map(r=>r[key]);
+  return [l,fn==='count'?rs.length:fn==='sum'?v.reduce((a,b)=>a+b,0):fn==='avg'?(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1):Math.max(...v)]})}
+const FNL={count:'人数',sum:'合計',avg:'平均',max:'最大値'};
+function showTable(res,fn,unit){$('#rt').innerHTML=`<tr>${res.map(r=>`<th>${r[0]}</th>`).join('')}</tr><tr>${res.map(r=>`<td><b>${r[1]}</b>${unit}</td>`).join('')}</tr>`}
+async function scan(col){const trs=$$('#tb tr').slice(1);for(let i=0;i<trs.length;i+=3){trs.slice(i,i+3).forEach(t=>t.classList.add('hit'));$('#scr').scrollTop=trs[i].offsetTop-120;await sleep(45);trs.slice(i,i+3).forEach(t=>t.classList.remove('hit'))}$('#scr').scrollTop=0}
+function chart(type,res){const W=390,H=230,pad=34,max=Math.max(...res.map(r=>+r[1]));const n=res.length,bw=(W-pad*2)/n;let s='';
+  if(type==='bar'){res.forEach((r,i)=>{const hh=(H-60)*r[1]/max;s+=`<rect x="${pad+i*bw+8}" y="${H-30}" width="${bw-16}" height="0" rx="4" fill="#0a66d1"><animate attributeName="height" to="${hh}" dur=".6s" begin="${i*.1}s" fill="freeze"/><animate attributeName="y" to="${H-30-hh}" dur=".6s" begin="${i*.1}s" fill="freeze"/></rect><text x="${pad+i*bw+bw/2}" y="${H-12}" text-anchor="middle" font-size="11">${r[0]}</text><text x="${pad+i*bw+bw/2}" y="${H-36-hh}" text-anchor="middle" font-size="11" font-weight="800">${r[1]}人</text>`})}
+  if(type==='line'){const pts=res.map((r,i)=>`${pad+i*bw+bw/2},${H-30-(H-60)*r[1]/max}`);s+=`<polyline points="${pts.join(' ')}" fill="none" stroke="#e2620c" stroke-width="3"/>`+res.map((r,i)=>`<circle cx="${pts[i].split(',')[0]}" cy="${pts[i].split(',')[1]}" r="4" fill="#e2620c"/><text x="${pad+i*bw+bw/2}" y="${H-12}" text-anchor="middle" font-size="11">${r[0]}</text>`).join('')}
+  if(type==='pie'){const tot=res.reduce((a,r)=>a+ +r[1],0);let a0=-Math.PI/2;const cs=['#0a66d1','#12a150','#f5b400','#e2620c','#7a5af8','#98a2b3'];res.forEach((r,i)=>{const a1=a0+2*Math.PI*r[1]/tot;const x0=195+90*Math.cos(a0),y0=115+90*Math.sin(a0),x1=195+90*Math.cos(a1),y1=115+90*Math.sin(a1);s+=`<path d="M195,115 L${x0},${y0} A90,90 0 ${a1-a0>Math.PI?1:0} 1 ${x1},${y1}z" fill="${cs[i]}" stroke="#fff"/>`;const am=(a0+a1)/2;s+=`<text x="${195+112*Math.cos(am)}" y="${115+112*Math.sin(am)}" font-size="10" text-anchor="middle">${r[0]}</text>`;a0=a1})}
+  if(type==='sc'){rows.forEach(r=>{s+=`<circle cx="${pad+(r.age-10)*5.5}" cy="${H-30-r.buy*14}" r="3" fill="#7a5af8" opacity=".7"/>`});s+=`<text x="${W/2}" y="${H-8}" font-size="10" text-anchor="middle">年齢 →</text>`}
+  $('#chart').innerHTML=`<svg width="${W}" height="${H}"><line x1="${pad}" y1="${H-30}" x2="${W-pad}" y2="${H-30}" stroke="#d0d5dd"/>${s}</svg>`}
+const CHW={line:'折れ線グラフは「時間とともにどう変わるか」を見るのが得意。年代は時間の流れではないから、量を比べるグラフがいいね。',pie:'円グラフは「全体の中の割合」を見るのが得意。今回は年代ごとの人数の“多い・少ない”を比べたいんだ。',sc:'散布図は「2つの量の関係」を見るグラフ。今回は年代ごとの人数を比べたいね。'};
+Page.init({id:'05',stage:'req',title:'顧客の分析',steps:2,
+ mission:'たくさんの顧客データを処理して、どの年代のお客さんが多いかを調べよう',
+ intro:'60人分の顧客データがあるよ。表をそのまま見ても傾向はわからない。<b>どんな計算</b>をして、<b>どんなグラフ</b>で見ればいいかな？',
+ hints:['人数を知りたいときは、当てはまる行を「数える」関数を使うよ。','グラフの種類によって得意なことが違う。カードの説明を読んでみよう。'],
+ async onCheck(){
+  if(step===0){const c=P.get($('#sCol')),f=P.get($('#sFn'));
+    if(c&&f){await scan();const res=calc(c,f);showTable(res,f,f==='count'?'人':'')}
+    if(!P.judge()){if(c&&f)Eng.say((c!=='age'?'結果が「年代ごと」になっていないね。 ':'')+(f!=='count'?'結果が人数になっていないよ（'+FNL[f]+'になっている）。':''),'ng');return false}
+    P.lock();step=1;Page.setStep(1);$('#st2').classList.add('on');Eng.say('年代ごとの人数が出たね！ でも数字だけだと比べにくい…。次は、結果を見やすく表すグラフを選ぼう。','ok');return false}
+  const g=P2.get($('#sCh'));const res=calc('age','count');if(g)chart(g,res);
+  if(!g){Eng.point($('#sCh'),'グラフの種類を選んでね。');return false}
+  if(g!=='bar'){Eng.point($('#sCh'),CHW[g]);return false}
+  $('#sCh').classList.add('ok');P2.lock();const i=$('#ins');i.style.display='block';i.innerHTML='💡 わかったこと：<b>20代・30代</b>のお客さんが全体の半分以上！<br>→ スマホで見やすい画面・かんたんな操作を重視しよう。';return true},
+ doneMsg:'データ分析で、お客さんの傾向がわかったね。「処理（関数）」と「見せ方（グラフ）」を目的に合わせて選ぶのがポイントだよ。'});
+</script>

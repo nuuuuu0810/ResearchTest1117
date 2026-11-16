@@ -1,0 +1,157 @@
+<!-- title: バックエンド -->
+<style>
+.g3{display:grid;grid-template-columns:300px 1fr 440px;grid-template-rows:1fr 128px;height:711px}
+.mk{grid-row:1/3;display:flex;justify-content:center;padding-top:12px;border-right:1px solid var(--line);background:#fff}
+.sim{padding:12px 16px;display:flex;flex-direction:column;gap:10px;overflow:hidden;position:relative}
+.ws{border-left:1px solid var(--line);background:#fff;padding:12px 14px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.pal{grid-column:2/4;border-top:1px solid var(--line);background:#fff;padding:10px 16px;display:flex;gap:12px;align-items:flex-start}
+.pal .pool{gap:7px}
+/* ブロック */
+.blk{border-radius:8px;color:#fff;font-weight:800;font-size:12.5px;padding:7px 10px;border:none;box-shadow:0 2px 0 rgba(0,0,0,.2)}
+.blk .ic{font-size:13px}
+.c-var{background:#f08c00}.c-loop{background:#e8a700}.c-if{background:#d4a017;background:#c98a00}.c-op{background:#12a150}.c-out{background:#7a5af8}.c-fn{background:#dd2590}
+.c-ctl{background:#e8a700}
+.prog{font-size:12.5px;display:flex;flex-direction:column;gap:5px}
+.ln{display:flex;align-items:center;gap:6px;min-height:36px}
+.ln .no{width:20px;font-family:monospace;color:#98a2b3;font-size:11px;text-align:right;flex:none}
+.ln .slot{flex:1;min-height:36px;min-width:0}
+.ln .slot .piece{min-height:34px}
+.ln .fx{flex:1;border-radius:8px;padding:8px 10px;font-weight:800;color:#fff}
+.ln.run{background:#fff8d6;border-radius:8px}
+.ind1{margin-left:22px}.ind2{margin-left:44px}
+.hdr{font-size:13px;font-weight:800;display:flex;align-items:center;gap:8px}
+.tabs{display:flex;gap:6px}
+.tabs span{font-size:11.5px;font-weight:800;padding:5px 12px;border-radius:14px;background:#e9ecf1;color:#667085}
+.tabs span.on{background:#111;color:#fff}.tabs span.done{background:var(--okbg);color:var(--ok)}
+/* 線形探索 */
+.arr{display:flex;gap:8px;justify-content:center;padding:8px 0}
+.arr .it{width:78px;border:2px solid #d0d5dd;border-radius:12px;background:#fff;display:flex;flex-direction:column;align-items:center;padding:6px 2px;font-size:11px;font-weight:800;position:relative;transition:all .25s}
+.arr .it .e{font-size:28px}
+.arr .it .ix{position:absolute;top:-18px;font-family:monospace;font-size:10px;color:#98a2b3}
+.arr .it.cmp{border-color:#e5383b;box-shadow:0 0 0 3px rgba(229,56,59,.2)}
+.arr .it.hit{border-color:var(--ok);background:#f3fbf6;box-shadow:0 0 0 3px rgba(18,161,80,.25)}
+.arr .it.miss{opacity:.4}
+.cmpbox{text-align:center;font-family:monospace;font-size:14px;font-weight:800;min-height:22px}
+.howto{display:grid;grid-template-columns:30px 1fr;gap:6px 10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.5}
+.howto b.n{font-size:22px;color:#0a66d1;font-weight:900;text-align:center}
+.howto mark{background:#fff3a0}
+/* バブルソート（シミュレーター） */
+#bars{display:flex;gap:6px;align-items:flex-end;justify-content:center;height:118px}
+.bar{width:42px;border-radius:6px 6px 0 0;color:#fff;font-weight:800;font-size:12px;display:flex;align-items:flex-start;justify-content:center;padding-top:4px;transition:height .3s,background .3s;background:#cccccc}
+.bs-rows{display:flex;flex-direction:column;gap:4px;align-items:center}
+.bs-row{display:flex;gap:6px;align-items:center}
+.bs-row select,.bs-row .cel{width:40px;height:40px;border-radius:6px;border:1px solid transparent;font-size:17px;font-weight:800;text-align:center;text-align-last:center;appearance:none;-webkit-appearance:none;color:#fff;background:#ccc;font-family:inherit;display:flex;align-items:center;justify-content:center}
+.bs-row select{background:#ff4136;cursor:pointer}
+.bs-row .cel.init{background:#FFC107;color:#111}
+.bs-row .cel.sorted{background:#8CE3FE;color:#fff}
+.bs-row .cel.fin{background:#FFC107;color:#111}
+.bs-row .cel.uns{background:#ccc}
+.bs-row button{width:38px;height:38px;border-radius:6px;background:#212121;color:#fff;border:none;cursor:pointer;font-size:13px}
+.bs-row button:disabled{background:#666;cursor:not-allowed}
+.bs-row .stt{width:56px;font-weight:800;font-size:13px}
+.stt.ok{color:#2ecc40}.stt.ng{color:#ff4136}
+.bs-lab{font-size:11px;color:var(--sub);font-weight:700;width:58px;text-align:right}
+.vars{display:flex;gap:8px;flex-wrap:wrap}
+.vars div{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:6px 10px;font-family:monospace;font-size:13px}
+.vars b{color:#facc15}
+.trace{background:#0f172a;color:#cbd5e1;border-radius:10px;padding:8px 12px;font-family:monospace;font-size:12px;line-height:1.6;min-height:120px;white-space:pre-wrap}
+</style>
+<div class="g3">
+  <div class="mk" id="mock"></div>
+  <div class="sim" id="sim"></div>
+  <div class="ws"><div class="hdr">🧱 ブロックプログラミング <div class="tabs" id="tabs"><span>①検索</span><span>②並び替え</span><span>③合計</span></div></div><div id="ws"></div></div>
+  <div class="pal"><span class="tag">ブロック</span><div class="pool" id="pool"></div></div>
+</div>
+<script>
+const M=new Mock($('#mock'));M.go('top');
+let stage=0,P=null;
+function tabs(){$$('#tabs span').forEach((s,i)=>s.className=i<stage?'done':i===stage?'on':'');Page.setStep(stage)}
+const B=(c,t)=>({label:t,cls:'blk '+c});
+const L=(n,ind,inner)=>`<div class="ln ${ind?'ind'+ind:''}"><span class="no">${n}</span>${inner}</div>`;
+const SL=(acc,hint)=>`<div class="slot" data-accept="${acc}" data-hint="${hint}"><span class="ph">ブロックを置く</span></div>`;
+const FX=(c,t)=>`<div class="fx ${c}">${t}</div>`;
+
+/* ===== ① 線形探索 ===== */
+function stage1(){
+ $('#sim').innerHTML=`<div class="ptitle">処理：商品検索（線形探索）</div>
+  <div class="howto"><b class="n">1</b><span>配列の<mark>先頭から順番に</mark>、商品名と検索語を比べる</span><b class="n">2</b><span><mark>同じなら</mark>見つかった！ その商品を表示して終わる</span><b class="n">3</b><span>違えば i を1増やして<mark>次の商品へ</mark></span><b class="n">4</b><span>最後まで見つからなければ「見つかりません」</span></div>
+  <div style="font-size:12.5px;font-weight:800">🔍 検索語：「オレンジ」　　商品の配列 商品[0]〜商品[5]</div>
+  <div class="arr" id="arr">${PRODUCTS.map((p,i)=>`<div class="it"><span class="ix">[${i}]</span><span class="e">${p.e}</span>${p.name}</div>`).join('')}</div><div class="cmpbox" id="cmp"></div><div class="vars" id="vars"><div>i = <b>-</b></div></div>`;
+ $('#ws').innerHTML=`<div class="prog">${L(1,0,FX('c-fn','関数 検索する（検索語）'))}${L(2,1,FX('c-var','i ← 0'))}${L(3,1,SL('loop','くりかえしの条件は？ i が商品の数より小さいあいだ、配列を順に見ていくよ。'))}${L(4,2,SL('if','比べて「同じ」だったら見つかったことになるね。'))}${L(5,3,SL('show','見つかったら、その商品を表示して終わるよ。'))}${L(6,2,SL('inc','次の商品を見るために、i をどうする？'))}${L(7,1,FX('c-out','「見つかりません」と表示する'))}</div>`;
+ P=new Puzzle({root:$('#ws'),pool:$('#pool'),pieces:{loop:B('c-loop','くりかえす：i ＜ 商品の数 のあいだ'),if:B('c-if','もし 商品[i] ＝ 検索語 なら'),show:B('c-out','商品[i] を表示して終わる'),inc:B('c-var','i ← i ＋ 1'),
+  x1:B('c-var','i ← i − 1'),x2:B('c-if','もし 商品[i] ≠ 検索語 なら'),x3:B('c-out','商品[0] だけを表示する')}});
+ M.go('top')}
+async function run1(){const its=$$('#arr .it');its.forEach(e=>e.className='it');await M.go('top');await M.tap('q');await M.type('q','オレンジ');
+ const ok=P.check().ok;const lines=$$('#ws .ln');const hl=n=>{lines.forEach(l=>l.classList.remove('run'));if(n)lines[n-1].classList.add('run')};
+ for(let i=0;i<PRODUCTS.length;i++){$('#vars').innerHTML=`<div>i = <b>${i}</b></div><div>商品[i] = <b>${PRODUCTS[i].name}</b></div>`;its[i].classList.add('cmp');hl(4);
+  const eq=PRODUCTS[i].id==='orange';$('#cmp').textContent=`${PRODUCTS[i].name} ＝ オレンジ ？ → ${eq?'○ 同じ！':'× ちがう'}`;await sleep(650);
+  if(!ok){its[i].classList.remove('cmp');hl(0);return false}
+  if(eq){its[i].classList.replace('cmp','hit');hl(5);await M.go('results',{query:'オレンジ',list:['orange']});M.hl('p-orange');await sleep(900);M.unhl();hl(0);return true}
+  its[i].classList.replace('cmp','miss');hl(6);await sleep(250)}return false}
+
+/* ===== ② バブルソート（シミュレーター） ===== */
+const INIT=[3,5,1,4,2];const PID={1:'orange',2:'banana',3:'apple',4:'straw',5:'grape'};let cur=[...INIT],pass=0;
+function stage2(){P&&P.lock(true);cur=[...INIT];pass=0;
+ $('#sim').innerHTML=`<div class="ptitle">処理：検索結果を「安い順」に並び替え（バブルソート）　※値段は百円単位</div><div id="bars"></div><div class="bs-rows" id="rows"></div>`;
+ $('#ws').innerHTML=`<div class="howto" style="grid-template-columns:30px 1fr"><b class="n">1</b><span><mark>となり同士</mark>の数を左から順に比べる</span><b class="n">2</b><span>左の方が大きければ<mark>入れかえる</mark>（▼で数を選び直す）</span><b class="n">3</b><span>右はしまで進むと、<mark>一番大きい数が右へ</mark>移動して確定（水色）</span><b class="n">4</b><span><b>▶</b>（実行）を押す　OK：正しい／エラー：正しくない</span><b class="n">5</b><span>完了になるまで、1〜4を<mark>くりかえす</mark></span></div>
+  <div class="prog" style="margin-top:6px">${L(1,0,FX('c-loop','くりかえす：まだ並び替えが終わっていないあいだ'))}${L(2,1,FX('c-loop','くりかえす：左から右へ、となり同士を見る'))}${L(3,2,FX('c-if','もし 左 ＞ 右 なら'))}${L(4,3,FX('c-var','左と右を入れかえる'))}</div>
+  <div style="font-size:11.5px;color:var(--sub);line-height:1.6">💡 1回の「▶」で、となり同士の比較を左から右まで<b>ひと通り</b>やった後の並びを入力しよう。</div>`;
+ $('#pool').innerHTML='<span style="font-size:12px;color:var(--sub)">この段階は、左のシミュレーターで操作するよ。</span>';
+ const rows=$('#rows');rows.innerHTML=`<div class="bs-row"><span class="bs-lab">はじめ</span>${INIT.map(v=>`<div class="cel init">${v}</div>`).join('')}<span style="width:100px"></span></div>`;
+ for(let r=0;r<INIT.length-1;r++)rows.insertAdjacentHTML('beforeend',`<div class="bs-row" data-r="${r}" style="display:none"><span class="bs-lab">${r+1}回目</span><span class="cells"></span><button>▶</button><span class="stt"></span></div>`);
+ bars(cur,cur.map(()=>'#FFC107'));prepRow(0);
+ M.go('results',{query:'くだもの',list:INIT.map(v=>PID[v]),sortLabel:'安い順に並び替え中…'})}
+function bars(a,cols){$('#bars').innerHTML=a.map((v,i)=>`<div class="bar" style="height:${22+v*18}px;background:${cols[i]}">${v}</div>`).join('')}
+function prepRow(r){const row=$(`.bs-row[data-r="${r}"]`);row.style.display='flex';const n=INIT.length,fixedFrom=n-r;
+ $('.cells',row).style.display='flex';$('.cells',row).style.gap='6px';
+ $('.cells',row).innerHTML=cur.map((v,i)=>i<fixedFrom?`<select>${[1,2,3,4,5].map(o=>`<option ${o===v?'selected':''}>${o}</option>`).join('')}</select>`:`<div class="cel sorted">${v}</div>`).join('');
+ $$('select',row).forEach(s=>s.onchange=()=>bars(vals(row),vals(row).map((_,i)=>i<fixedFrom?'#ff4136':'#8CE3FE')));
+ bars(cur,cur.map((_,i)=>i<fixedFrom?'#ff4136':'#8CE3FE'));$('button',row).onclick=()=>exec(r)}
+const vals=row=>[...$('.cells',row).children].map(e=>+(e.value||e.textContent));
+function onePass(a,lim){a=[...a];for(let j=0;j<lim-1;j++)if(a[j]>a[j+1])[a[j],a[j+1]]=[a[j+1],a[j]];return a}
+async function exec(r){if(r!==pass)return;const row=$(`.bs-row[data-r="${r}"]`);const n=INIT.length,u=vals(row),exp=onePass(cur,n-r);const st=$('.stt',row);
+ if(u.join()!==exp.join()){st.textContent='エラー';st.className='stt ng';bars(u,u.map(()=>'#ff4136'));
+   const k=u.findIndex((v,i)=>v!==exp[i]);Eng.point($('.cells',row).children[k],`${r+1}回目は、左から順に「となり同士」を比べて、左が大きいときだけ入れかえるよ。この位置には <b>${exp[k]}</b> が来るはず…まずは左から1組ずつ比べてみよう。`);return}
+ Eng.clear();st.textContent='OK';st.className='stt ok';$('button',row).disabled=true;cur=exp;
+ $('.cells',row).innerHTML=cur.map((v,i)=>`<div class="cel ${i>=n-r-1?'sorted':'uns'}">${v}</div>`).join('');
+ await M.go('results',{list:cur.map(v=>PID[v])},{push:false,wait:200});pass++;
+ if(pass<n-1)prepRow(pass);else{bars(cur,cur.map(()=>'#FFC107'));row.insertAdjacentHTML('afterend',`<div class="bs-row"><span class="bs-lab">完了</span>${cur.map(v=>`<div class="cel fin">${v}</div>`).join('')}<span class="stt ok">完了</span></div>`);
+   await M.go('results',{list:cur.map(v=>PID[v]),sortLabel:'安い順'});M.hl('sort');Eng.say('並び替え完了！ 右下の「答え合わせ」で次へ進もう。','ok')}}
+
+/* ===== ③ 合計金額（関数・変数・配列・反復・分岐） ===== */
+const CART=[{id:'apple',qty:2},{id:'grape',qty:2},{id:'pine',qty:1}];
+function stage3(){
+ $('#sim').innerHTML=`<div class="ptitle">処理：カートの合計金額と送料を計算する</div>
+  <div style="font-size:12.5px;line-height:1.7;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px">🧾 ルール：合計（単価×個数の合計）が <b>3,000円以上なら送料無料</b>、それより少なければ <b>送料500円</b>。<br>📦 カートの配列：${CART.map((c,i)=>`カート[${i}] = ${PD[c.id].e}${PD[c.id].name} ${PD[c.id].price}円×${c.qty}`).join('　')}</div>
+  <div class="vars" id="vars"><div>合計 = <b>-</b></div><div>送料 = <b>-</b></div></div><div class="trace" id="trace">▶ 答え合わせで、プログラムを実行するよ</div>`;
+ $('#ws').innerHTML=`<div class="prog">${L(1,0,FX('c-fn','関数 合計を計算する（カート）'))}${L(2,1,SL('zero','計算を始める前に、合計を入れておく変数を用意しよう。最初はいくら？'))}${L(3,1,SL('loop','カートの配列に入っている商品を、1つずつ全部見るには？'))}${L(4,2,SL('add','1つの商品の金額は「単価×個数」。それを合計に…'))}${L(5,1,SL('if3000','送料が無料になる条件は？ ルールを読んでみよう。'))}${L(6,2,SL('ship0','条件に当てはまったら、送料はいくら？'))}${L(7,1,FX('c-if','そうでなければ'))}${L(8,2,FX('c-var','送料 ← 500'))}${L(9,1,FX('c-out','合計 ＋ 送料 を返す'))}</div>`;
+ P=new Puzzle({root:$('#ws'),pool:$('#pool'),pieces:{zero:B('c-var','合計 ← 0'),loop:B('c-loop','カートの商品を1つずつ くりかえす'),add:B('c-op','合計 ← 合計 ＋ 単価 × 個数'),if3000:B('c-if','もし 合計 ≧ 3000 なら'),ship0:B('c-var','送料 ← 0'),
+  x1:B('c-var','合計 ← 100'),x2:B('c-op','合計 ← 合計 × 個数'),x3:B('c-if','もし 合計 ＝ 0 なら'),x4:B('c-loop','カート[0] だけを見る')}});
+ M.go('cart',{cart:CART})}
+async function run3(){const sl=$$('#ws .slot'),g=i=>P.get(sl[i]);const tr=$('#trace');let t='';const log=async s=>{t+=s+'\n';tr.textContent=t;await sleep(420)};
+ const lines=$$('#ws .ln');const hl=n=>{lines.forEach(l=>l.classList.remove('run'));if(n)lines[n-1].classList.add('run')};
+ let tot=g(0)==='zero'?0:g(0)==='x1'?100:NaN;hl(2);await log(`合計 ← ${g(0)?(isNaN(tot)?'?':tot):'（未定義）'}`);
+ const items=g(1)==='loop'?CART:g(1)==='x4'?CART.slice(0,1):[];
+ for(const c of items){hl(4);const p=PD[c.id];if(g(2)==='add')tot+=p.price*c.qty;else if(g(2)==='x2')tot*=c.qty;else tot=NaN;
+   $('#vars').innerHTML=`<div>合計 = <b>${tot}</b></div><div>送料 = <b>-</b></div>`;await log(`${p.name}：${g(2)==='add'?`+ ${p.price}×${c.qty}`:g(2)==='x2'?`× ${c.qty}`:'?'} → 合計 ${tot}`)}
+ let ship;hl(5);const cond=g(3)==='if3000'?tot>=3000:g(3)==='x3'?tot===0:false;if(cond&&g(4)==='ship0')ship=0;else if(cond)ship=NaN;else ship=500;
+ await log(`条件 ${g(3)==='if3000'?'合計≧3000':g(3)==='x3'?'合計＝0':'?'} → ${cond?'はい':'いいえ'} → 送料 ${ship}`);hl(9);
+ const res=tot+ship;$('#vars').innerHTML=`<div>合計 = <b>${tot}</b></div><div>送料 = <b>${ship}</b></div><div>返す値 = <b>${isNaN(res)?'エラー':res}</b></div>`;
+ await log(`▶ 結果：${isNaN(res)?'計算できない':res+'円'}　（期待：2900円）`);hl(0);
+ await M.go('cart',{cart:CART,totalOverride:isNaN(res)?'エラー':`${yen(res)}`});M.hl('total',res===2900?'mhl':'mhl-ng');await sleep(800);M.unhl();return res===2900&&P.check().ok}
+
+const STG=[stage1,stage2,stage3];
+function go(){tabs();STG[stage]()}
+go();
+Page.init({id:'27',stage:'dev',title:'バックエンド',steps:3,
+ mission:'設計した処理を、ブロックでプログラムにしよう（線形探索・バブルソート・合計金額の計算）',
+ intro:'いよいよ開発！ サーバーで動くプログラム（バックエンド）をつくるよ。まずは<b>商品検索</b>。右のプログラムの空いているところに、下のブロックを入れよう。',
+ hints:['プログラムの3つの基本：順番に実行（順次）・くりかえし（反復）・もし〜なら（分岐）。','左の「やり方」の説明と、プログラムの行を見比べてみよう。'],
+ async onCheck(){
+  if(stage===0){const ok=await run1();if(!ok){P.judge();M.badge('⚠ 正しく検索できない…',{cls:'ng',top:200});setTimeout(()=>M.clearBadges(),1600);return false}
+    P.judge();P.lock();stage=1;await sleep(500);go();Eng.say('検索できた！ 次は検索結果を<b>安い順</b>に並び替えよう。左のシミュレーターで、1回目の並び替え後の状態をつくって ▶ を押してね。','ok');return false}
+  if(stage===1){if(pass<INIT.length-1){Eng.point($(`.bs-row[data-r="${pass}"] .cells`),'まだ並び替えが終わっていないよ。▶ で1回ずつ確かめながら進めよう。',{title:'あと少し！'});return false}
+    stage=2;go();Eng.say('並び替え完了！ 最後は<b>合計金額</b>。関数・変数・配列・くりかえし・分岐をぜんぶ使うよ。','ok');return false}
+  const ok=await run3();if(!ok){P.judge();return false}P.judge();P.lock();M.hideFinger();return true},
+ doneMsg:'バックエンドのプログラムが完成！ 検索・並び替え・計算という“処理”が、ブロック（＝プログラム）で動いたね。'});
+</script>

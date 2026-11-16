@@ -1,0 +1,52 @@
+<!-- title: 接続の流れ -->
+<style>
+.g2{display:grid;grid-template-columns:320px 1fr;height:711px}
+.mk{display:flex;justify-content:center;padding-top:14px;border-right:1px solid var(--line);background:#fff}
+.rt{padding:14px 20px;display:flex;flex-direction:column;gap:10px}
+.seq{position:relative;background:#fff;border:1px solid var(--line);border-radius:14px;height:470px}
+.who{position:absolute;top:12px;width:150px;transform:translateX(-50%);text-align:center;font-weight:800;font-size:13px}
+.who .ic{font-size:34px;display:block}
+.who small{display:block;font-size:10.5px;color:var(--sub);font-weight:600}
+.life{position:absolute;top:96px;bottom:14px;width:3px;transform:translateX(-50%);background:repeating-linear-gradient(#c9ced6 0 8px,transparent 8px 14px)}
+.msg{position:absolute;height:2px;background:#111}
+.msg::after{content:"";position:absolute;top:-5px;border:6px solid transparent}
+.msg.r::after{right:-2px;border-left:9px solid #111}.msg.l::after{left:-2px;border-right:9px solid #111}
+.msg .slot{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:330px;min-height:44px}
+.msg .no{position:absolute;left:-30px;top:-11px;width:22px;height:22px;border-radius:50%;background:#111;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.msg.l .no{left:auto;right:-30px}
+.msg.act{background:#f5b400;height:4px}
+.env{position:absolute;z-index:5;transform:translate(-50%,-50%);font-size:24px;transition:left 1s ease-in-out}
+.tip{font-size:12px;color:#344054;background:#f8f9fb;border-radius:10px;padding:8px 12px;line-height:1.6}
+.pl{display:flex;gap:10px;align-items:center}
+</style>
+<div class="g2">
+  <div class="mk" id="mock"></div>
+  <div class="rt">
+    <div class="seq" id="seq">
+      <div class="who" style="left:15%"><span class="ic">📱</span>スマホ<small>URLをクリック</small></div>
+      <div class="who" style="left:52%"><span class="ic">📇</span>DNSサーバー<small>住所録（名前→IPアドレス）</small></div>
+      <div class="who" style="left:87%"><span class="ic">🖥️</span>Webサーバー<small>203.0.113.5</small></div>
+      <div class="life" style="left:15%"></div><div class="life" style="left:52%"></div><div class="life" style="left:87%"></div>
+    </div>
+    <div class="tip">💡 「shopping.jp」のような名前（ドメイン名）は人間用。コンピュータどうしは <b>IPアドレス</b>（203.0.113.5 のような数字）で相手を見つけるよ。</div>
+    <div class="pl"><span class="tag">選択肢（メッセージ）</span><div class="pool" id="pool"></div></div>
+  </div>
+</div>
+<script>
+const ROW=[[15,52,'q','スマホがまず聞きに行くのは？ 名前（shopping.jp）からIPアドレスを調べてくれるサーバーだよ。'],[52,15,'a','DNSサーバーは、調べたIPアドレスを教えてくれるよ。'],[15,87,'req','IPアドレスがわかったら、その相手（Webサーバー）にデータをお願いするよ。'],[87,15,'res','最後に、Webサーバーがページのデータを返してくれるよ。']];
+const seq=$('#seq');
+ROW.forEach(([a,b,k,hint],i)=>{const L=Math.min(a,b),W=Math.abs(a-b);seq.appendChild(h(`<div class="msg ${a<b?'r':'l'}" style="left:${L}%;width:${W}%;top:${170+i*80}px"><span class="no">${i+1}</span><div class="slot" data-accept="${k}" data-hint="${hint}"><span class="ph">メッセージを置く</span></div></div>`))});
+const P=new Puzzle({root:seq,pool:$('#pool'),pieces:{
+ q:{label:'「shopping.jp のIPアドレスを教えて」',icon:'❓'},a:{label:'「203.0.113.5 です」',icon:'📇'},req:{label:'「203.0.113.5 さん、ページのデータをください」',icon:'📨'},res:{label:'「Webページのデータです」',icon:'📄'},
+ x1:{label:'「DNSサーバーさん、ページのデータをください」',icon:'📨'},x2:{label:'「Webサーバーさん、あなたの住所はどこ？」',icon:'❔'}}});
+const M=new Mock($('#mock'));M.go('search',{query:'ショッピング'});
+async function fly(i){const m=$$('.msg')[i];m.classList.add('act');const [a,b]=ROW[i];const e=h(`<div class="env" style="left:${a}%;top:${170+i*80}px">✉️</div>`);seq.appendChild(e);await sleep(40);e.style.left=b+'%';await sleep(1050);e.remove();m.classList.remove('act')}
+Page.init({id:'24',stage:'des',title:'接続の流れ',nextLabel:'ネットワーク構成図へ戻る ▶',
+ mission:'URLをクリックしてからWebページが表示されるまでの、サーバーとのやりとりを順番に並べよう',
+ intro:'検索結果の「shopping.jp」をクリックしたら、スマホはどうやってお店のサーバーを見つけるのかな？ 矢印の上にメッセージを置こう。',
+ hints:['電話をかけるとき、名前から電話番号を電話帳で調べるのと同じだよ。','DNSサーバーが教えてくれるのは“住所（IPアドレス）”だけ。ページのデータはWebサーバーが持っているよ。'],
+ async onCheck(){const r=P.check();const bad=new Set([...r.wrong,...r.empty]);await M.tap('r-shop');M.badge('⏳ 接続中…',{cls:'w',top:200});
+   const ms=$$('.msg .slot');for(let i=0;i<4;i++){if(bad.has(ms[i])){M.clearBadges();M.badge('⚠ サーバーが見つかりません',{cls:'ng',top:200});Eng.point(ms[i],ms[i].dataset.hint);await M.go('search',{query:'ショッピング'},{push:false});return false}await fly(i);ms[i].classList.add('ok')}
+   M.clearBadges();await M.go('top');toast('🌐 shopping.jp を表示しました','ok');M.hideFinger();P.lock();return true},
+ doneMsg:'つながった！ ①名前でDNSサーバーに聞く → ②IPアドレスを教えてもらう → ③Webサーバーにお願い → ④ページが届く、という流れだね。'});
+</script>

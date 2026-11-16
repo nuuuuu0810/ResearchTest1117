@@ -1,0 +1,46 @@
+<!-- title: 情報モラルの動向調査 -->
+<style>
+.rv{padding:8px 12px;display:flex;flex-direction:column;gap:6px;font-size:11px}
+.rv .r{border:1px solid #eee;border-radius:10px;padding:7px 9px;line-height:1.5}
+.rv .r b{font-size:11px}.rv .st{color:#f5b400}
+.rv .pr{display:inline-block;background:#111;color:#fff;font-size:9px;border-radius:4px;padding:0 4px;margin-left:4px}
+.ck{position:absolute;left:8px;right:8px;bottom:14px;background:#fff;border-radius:14px;box-shadow:0 -4px 20px rgba(0,0,0,.2);padding:10px 12px;font-size:10.5px;line-height:1.5;z-index:46;animation:popIn .3s}
+.ck .bt{display:flex;gap:6px;margin-top:6px}.ck .bt span{flex:1;text-align:center;border:1px solid #111;border-radius:8px;padding:4px;font-weight:800}
+</style>
+<script>
+const shopOf=html=>`<div class="shop">${shopHead({cart:[]})}${html}</div>`;
+const REV=(list)=>shopOf(`<div class="rv"><b style="font-size:13px">🍇 グレープのレビュー</b>${list.map(r=>`<div class="r"><b>${r[0]}</b> <span class="st">${r[1]}</span>${r[3]?'<span class="pr">PR</span>':''}<br>${r[2]}</div>`).join('')}</div>`);
+const SC=new Scenes({riskLabel:'コンプライアンスリスク',slotLabel:'お店としての対応',
+ pieces:{
+  lim:{label:'1人が買える数を制限する',icon:'🔢'},pr:{label:'広告やPRであることをはっきり示す',icon:'🏷️'},rule:{label:'投稿ルールを決め、通報・削除できるようにする',icon:'🚩'},
+  ck:{label:'閲覧履歴の使い方を説明し、オフにできるようにする',icon:'🍪'},age:{label:'年齢を確認し、保護者の同意を求める',icon:'👪'},
+  x1:{label:'悪い評価のレビューはすべて消す',icon:'🙈'},x2:{label:'店員がお客さんのふりをして高評価を書く',icon:'⭐'}},
+ list:[
+  {icon:'📦',where:'人気商品の発売日',title:'転売目的の買い占め',short:'転売目的の大量購入',text:'数の少ない高級ブドウを、転売屋がプログラムを使って1人で100房も注文。本当にほしいお客さんが買えなくなっている。',
+   accept:['lim'],hint:'1人がたくさん買えてしまうことが問題だね。',ok:'1人2房までにして、多くのお客さんに届くようにしたよ。',
+   async scene(m){await m.go('detail',{sel:'grape',qty:100});m.hl('qty','mhl-ng');m.badge('🤖 転売屋：100房まとめて注文！',{cls:'ng',top:300})},
+   async fix(m){await m.go('detail',{sel:'grape',qty:2});m.badge('🔢 お一人さま2房まで',{cls:'ok',top:300});await sleep(1300)}},
+  {icon:'🎭',where:'レビュー欄',title:'お店の人が書いた「やらせ」レビュー',short:'ステルスマーケティング',text:'お店が人に頼んで、ふつうのお客さんのふりをして★5のレビューを書いてもらっている。広告だとわからない宣伝は、法律でも禁止されたよ。',
+   accept:['pr'],hint:'宣伝であることを隠していることが問題。逆に、宣伝なら…？',ok:'依頼したレビューには「PR」と表示したよ。',
+   async scene(m){await m.go('custom',{html:REV([['ゆう','★★★★★','人生でいちばんおいしいブドウ！'],['あき','★★★★★','毎日これしか食べません！'],['けん','★★★☆☆','少し酸っぱかったかな']])},{label:'レビュー'});m.badge('⚠ 上の2件はお店が頼んで書かせたもの',{cls:'ng',top:300})},
+   async fix(m){await m.go('custom',{html:REV([['ゆう','★★★★★','人生でいちばんおいしいブドウ！',1],['あき','★★★★★','毎日これしか食べません！',1],['けん','★★★☆☆','少し酸っぱかったかな']])},{label:'レビュー'});await sleep(1500)}},
+  {icon:'💢',where:'レビュー欄',title:'ほかの人を傷つける書き込み',short:'誹謗中傷',text:'レビュー欄に、配達員や他のお客さんの悪口、個人名をさらす書き込みが増えている。',
+   accept:['rule'],hint:'悪いレビューを全部消すのはやりすぎ。ルール違反のものに対応できるしくみが必要だね。',ok:'投稿ルールを決め、ルール違反は通報・削除できるようにしたよ。',
+   async scene(m){await m.go('custom',{html:REV([['匿名','★☆☆☆☆','配達の〇〇って人、最悪。顔も…（悪口）'],['匿名','★☆☆☆☆','これ買ってるやつ全員センスない']])},{label:'レビュー'});m.badge('⚠ 人を傷つける書き込み',{cls:'ng',top:280})},
+   async fix(m){await m.go('custom',{html:REV([['けん','★★★☆☆','少し酸っぱかったかな（正直な感想はOK）']])+'<div style="position:absolute;left:12px;right:12px;bottom:40px;font-size:10px;background:#f2f4f7;border-radius:8px;padding:8px">📏 投稿ルール：人を傷つける内容は禁止。🚩 通報により2件を削除しました</div>'},{label:'レビュー'});await sleep(1500)}},
+  {icon:'🍪',where:'トップページ',title:'見たものが勝手に広告に出てくる',short:'閲覧履歴の無断利用',text:'一度見ただけの商品の広告が、ほかのサイトでも何度も表示される。お客さんは「のぞかれているみたいでこわい」と感じている。',
+   accept:['ck'],hint:'履歴をどう使うか説明して、使われたくない人は選べるようにしよう。',ok:'Cookieの使い方を説明し、オフにできるようにしたよ。',
+   async scene(m){await m.go('top');for(let i=0;i<3;i++){m.ovl.appendChild(h(`<div class="notif" style="top:${80+i*70}px"><b>広告</b>🍍 さっき見たパイナップル、まだ買わないの？</div>`));await sleep(350)}m.badge('😨 なんで知ってるの…？',{cls:'w',bottom:60})},
+   async fix(m){await m.go('top');m.ovl.appendChild(h('<div class="ck">🍪 このサイトでは、おすすめ表示のために閲覧履歴（Cookie）を使います。<u>詳しくはこちら</u><div class="bt"><span>すべて許可</span><span style="background:#111;color:#fff">必要なものだけ</span></div></div>'));await sleep(1600)}},
+  {icon:'🧒',where:'決済',title:'子どもが保護者に黙って高額な買い物',short:'未成年の高額購入',text:'小学生が、保護者のカードを使って3万円分のフルーツを注文してしまった。',
+   accept:['age'],hint:'子どもだけで高額な契約をしないよう、確認のしくみをつくろう。',ok:'年齢を確認し、未成年は保護者の同意が必要になるようにしたよ。',
+   async scene(m){await m.go('info',{filled:true,cart:[{id:'pine',qty:20},{id:'grape',qty:28}]});m.badge('🧒「ママのカードでポチッ…」',{cls:'ng',top:300})},
+   async fix(m){await m.go('custom',{html:shopOf('<div class="login" style="padding:16px"><h4>👪 年齢の確認</h4><div class="fl">生年月日</div><div class="fi">2015年 4月 1日</div><div style="font-size:11px;background:#fff7e6;border-radius:8px;padding:8px;line-height:1.6">18歳未満の方は、保護者の同意が必要です。保護者のメールに確認を送りました。</div></div>')},{label:'年齢確認'});await sleep(1500)}}
+ ]});
+Page.init({id:'13',stage:'req',title:'情報モラルの動向調査',steps:5,
+ mission:'最近の情報社会で問題になっていることを調べ、ECサイトとしてどう対応するか決めよう',
+ intro:'法律で禁止されていなくても、モラル（倫理）やコンプライアンス（社会のルールを守ること）の点で問題になることがあるよ。',
+ hints:['「悪いレビューを全部消す」と、正直な感想まで消えてしまうね。','お店がお客さんのふりをするのは、だますことになるよ。'],
+ onCheck:()=>SC.check(),doneMsg:'これで要件定義は完了！ 機能・法律・個人情報・健康・セキュリティ・モラルと、たくさんの視点で要件を決めたね。次はいよいよ設計だ。'});
+SC.start();
+</script>

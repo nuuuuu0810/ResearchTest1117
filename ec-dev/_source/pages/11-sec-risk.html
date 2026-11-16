@@ -1,0 +1,45 @@
+<!-- title: 情報セキュリティリスク -->
+<style>
+.fake{height:100%;background:#fff7e6;display:flex;flex-direction:column;gap:6px;padding:10px 14px}
+.fake .url{background:#fee2e2;border-radius:8px;padding:5px 8px;font-size:10.5px;color:#b91c1c;font-weight:700}
+.fake h4{margin:6px 0 0;font-size:15px;color:#e11d48}
+.login{height:100%;display:flex;flex-direction:column;gap:8px;padding:16px}
+.login h4{margin:0 0 4px;font-size:16px}
+.cafe{height:100%;background:linear-gradient(#3b2f2a,#5b463c);color:#fff;padding:16px;display:flex;flex-direction:column;gap:12px;align-items:center;font-size:12px}
+.cafe .pk{background:#fff;color:#111;border-radius:8px;padding:6px 10px;font-family:monospace;font-size:10.5px;animation:fly 1.6s ease-in-out infinite}
+@keyframes fly{0%{transform:translateX(-60px);opacity:0}30%{opacity:1}100%{transform:translateX(60px);opacity:0}}
+.virus{height:100%;background:#111;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px;text-align:center}
+.virus .w{background:#dc2626;border-radius:12px;padding:12px;font-weight:900;font-size:13px;animation:blink .5s infinite alternate}
+@keyframes blink{to{opacity:.6}}
+</style>
+<script>
+const LOGIN=(u,p,extra='')=>`<div class="shop">${shopHead({cart:[]})}<div class="login"><h4>🔑 ログイン</h4><div class="fl">メールアドレス</div><div class="fi">${u}</div><div class="fl">パスワード</div><div class="fi">${p}</div>${extra}<div class="mbtn" style="margin-top:6px">ログイン</div></div></div>`;
+const RISKS={
+ phish:{label:'フィッシング詐欺 <small>本物そっくりの偽サイトに誘いこむ</small>',icon:'🎣'},
+ spoof:{label:'なりすまし（不正ログイン） <small>他人のID・パスワードを使う</small>',icon:'🎭'},
+ mal:{label:'マルウェア（ウイルス） <small>悪いプログラムを入れさせる</small>',icon:'🦠'},
+ tap:{label:'盗聴（通信の盗み見） <small>やりとり中のデータを盗み見る</small>',icon:'👂'},
+ x1:{label:'著作権の侵害',icon:'©️'},x2:{label:'うそ・大げさな広告',icon:'📢'}};
+const SC=new Scenes({riskLabel:'危ない場面',slotLabel:'これは何というリスク？',pieces:RISKS,
+ list:[
+  {icon:'🎣',where:'Web検索',title:'検索結果のいちばん上に「激安」サイト',short:'偽サイトでカード情報を入力',text:'検索結果の広告から「90%OFF」のサイトを開くと、Shoppingそっくりの画面でカード番号を入力するように言われた。URLをよく見ると…？',
+   accept:['phish'],hint:'本物そっくりの偽サイトにおびき寄せて、カード情報やパスワードを“釣り上げる”詐欺だよ。',ok:'フィッシング詐欺だね。URLが shopping-jp.xyz になっているよ。',
+   async scene(m){await m.go('search',{query:'ショッピング',fake:true});await m.tap('r-fake');await m.go('custom',{html:`<div class="fake"><div class="url">⚠ http://shopping-jp.xyz/sale</div><div class="shop-h"><span class="lg">S</span>Shopping</div><h4>全品90%OFF!! 残り3分</h4><div class="fl">カード番号</div><div class="fi" data-k="c">4980 1234 5678 9012</div><div class="fl">セキュリティコード</div><div class="fi">123</div><div class="mbtn" style="background:#e11d48">今すぐ購入</div></div>`},{label:'あやしいサイト'});
+     m.hl('c','mhl-ng');m.badge('💳 カード情報が犯人に送られてしまう！',{cls:'ng',top:380})},async fix(m){await sleep(300)}},
+  {icon:'🎭',where:'ログイン画面',title:'別のサイトと同じパスワードを使っていた',short:'流出したパスワードで不正ログイン',text:'ほかのサイトから流出したメールアドレスとパスワードを使って、犯人がShoppingに勝手にログインし、登録されたカードで買い物をしている。',
+   accept:['spoof'],hint:'本人のふりをして（なりすまして）、勝手にログインしているね。',ok:'なりすまし（不正ログイン）だね。パスワードの使い回しはとても危険！',
+   async scene(m){await m.go('custom',{html:LOGIN('hanako@example.jp','●●●●●●','<div style="font-size:10px;color:#b91c1c;font-weight:700">🕵️ 犯人：別のサイトから流出したリストを入力中…</div>')},{label:'ログイン'});await sleep(800);await m.go('done');m.badge('🕵️ 犯人が花子さんとして注文完了！',{cls:'ng',top:60})},async fix(m){await sleep(300)}},
+  {icon:'🦠',where:'あやしい警告',title:'「ウイルスに感染しました」という画面',short:'ニセ警告でアプリを入れさせる',text:'買い物中に突然「ウイルスに感染！今すぐこのアプリを入れて」と表示され、公式ストア以外からアプリを入れてしまった。',
+   accept:['mal'],hint:'悪意のあるプログラム（ソフトウェア）をまとめてなんと呼ぶかな？',ok:'マルウェアだね。入れたアプリが情報を盗み出していたんだ。',
+   async scene(m){await m.go('top');await sleep(500);await m.go('custom',{html:`<div class="virus"><div style="font-size:50px">☠️</div><div class="w">⚠ ウイルスに感染しました！<br>今すぐ「スマホ掃除アプリ」を<br>インストールしてください</div><div class="mbtn" data-k="ins" style="background:#dc2626;width:200px;margin:8px 0 0">インストール</div></div>`},{label:'ニセの警告'});await m.tap('ins');m.badge('📤 連絡先やパスワードが外部に送信されている…',{cls:'ng',top:380})},async fix(m){await sleep(300)}},
+  {icon:'📶',where:'カフェのWi-Fi',title:'鍵のないWi-Fiで、暗号化されていない通信',short:'通信の盗み見',text:'カフェの無料Wi-Fi（パスワードなし）につないで、暗号化されていない（http の）ページでカード番号を送信。同じWi-Fiにいる犯人が通信をのぞいている。',
+   accept:['tap'],hint:'通信の途中で、データをこっそり“聞いている（見ている）”ね。',ok:'盗聴（通信の盗み見）だね。暗号化されていないと、データがそのまま読めてしまう。',
+   async scene(m){await m.go('custom',{html:`<div class="cafe"><div style="font-size:40px">☕📶</div><b>Free_Cafe_WiFi（パスワードなし）</b><div class="pk">card=4980123456789012</div><div class="pk" style="animation-delay:.5s">name=山田花子</div><div style="font-size:40px;margin-top:10px">🕵️‍♂️💻</div><div>「カード番号、丸見えだ…」</div></div>`},{label:'カフェのWi-Fi'});m.badge('👂 送ったデータが読まれている！',{cls:'ng',top:400})},async fix(m){await sleep(300)}}
+ ]});
+Page.init({id:'11',stage:'req',title:'情報セキュリティリスク',steps:4,
+ mission:'ECサイトでねらわれやすい犯罪の手口を見ぬいて、リスクの名前を当てはめよう',
+ intro:'お店やお客さんをねらう犯罪の場面が再生されるよ。どんな手口か、<b>リスクの名前</b>を選んでね。対策は次の「セキュリティ対応」で考えるよ。',
+ hints:['「偽サイト」「本人のふり」「悪いアプリ」「のぞき見」…キーワードに注目しよう。'],
+ onCheck:()=>SC.check(),doneMsg:'4つの手口を見ぬけたね！ 次の「セキュリティ対応」で、これらへの対策を考えよう。'});
+SC.start();
+</script>
